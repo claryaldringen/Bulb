@@ -1,0 +1,21 @@
+{
+  "name": "Bulb",
+  "version": "0.0.0",
+  "homepage": "https://github.com/claryaldringen/Bulb",
+  "authors": [
+    "Martin Zadražil <zadram1@gmail.com>"
+  ],
+  "description": "Light web application for 3D modelling.",
+  "license": "GNU/GPL",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "threejs": "*",
+    "requirejs": "~2.1.9"
+  }
+}
