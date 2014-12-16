@@ -21,35 +21,53 @@ class Bulb.Document extends CJS.Document
 			objectList.setItems(@getCanvas().getScene().children)
 		objectList
 
-	getPropertyList: (geometry) ->
-		@propertyList = new Bulb.PropertyListCube('properties') if not @propertyList
-		@propertyList.getEvent('changeGeometry').subscribe(@, @geometryChange)
-		@propertyList.getEvent('change').subscribe(@, @propertyChange)
-		@propertyList.setParent(@).setGeometry(geometry?.parameters)
+	getPropertyList:  ->
+		propertyList = @getChildById('properties')
+		if not propertyList
+			propertyList = new Bulb.PropertyList('properties')
+			propertyList.getEvent('changeGeometry').subscribe(@, @geometryChange)
+			propertyList.getEvent('change').subscribe(@, @propertyChange)
+			propertyList.setParent(@)
+		propertyList
 
 	selectObject: (objectList) ->
 		object = @getCanvas().getScene().getObjectById(objectList.getSelectedItemId())
 		object = {position: null, rotation: null} if not object?
-		@getPropertyList(object.geometry).setPosition(object.position).setRotation(object.rotation).setScale(object.scale).render()
+		@getPropertyList()
+			.setPosition(object.position)
+			.setRotation(object.rotation)
+			.setScale(object.scale)
+			.setGeometry(object.geometry.parameters)
+			.setVertices(object.geometry.vertices)
+			.render()
 
 	geometryChange: (propertyList) ->
 		objectList = @getObjectList()
 		params = propertyList.getGeometry()
 		object = @getCanvas().replaceObject(objectList.getSelectedItemId(), params)
 		objectList.setSelectedItemId(object.id).render()
+		propertyList.setVertices(object.geometry.vertices).render()
 		@propertyChange(propertyList)
 
 	propertyChange: (propertyList) ->
 		position = propertyList.getPosition()
 		rotation = propertyList.getRotation()
 		scale = propertyList.getScale()
+		vertices = propertyList.getVertices()
 		canvas = @getCanvas()
 		object = canvas.getScene().getObjectById(@getObjectList().getSelectedItemId())
 		object.position.set(position.x, position.y, position.z)
 		object.rotation.set(rotation.x, rotation.y, rotation.z)
 		object.scale.set(scale.x, scale.y, scale.z)
+
+		vectors = []
+		vectors.push(new THREE.Vector3(vertice.x, vertice.y, vertice.z)) for vertice in vertices
+		object.geometry.vertices = vectors
+		object.geometry.verticesNeedUpdate = yes
+
 		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
 		canvas.restoreView()
+		propertyList
 
 	bindEvents: ->
 		super()

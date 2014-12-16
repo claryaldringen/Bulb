@@ -49,7 +49,7 @@ class Bulb.Canvas extends CJS.Component
 		@restoreView()
 
 	addCube: ->
-		cube = new THREE.Mesh(new THREE.BoxGeometry(10,10,10,2,2,2),  new THREE.MeshLambertMaterial({color: 0xFF0000}))
+		cube = new THREE.Mesh(new THREE.BoxGeometry(10,10,10,1,1,1),  new THREE.MeshLambertMaterial({color: 0xFF0000}))
 		cube.name = 'Cube'
 		@getScene().add(cube)
 		@restoreView()
