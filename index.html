@@ -3,8 +3,26 @@
 <head>
 	<title>Bulb</title>
 	<script type="text/javascript" src="bower_components/threejs/build/three.js"></script>
+	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+
+	<script type="text/javascript" src="coffee/ComponentJS/core.js"></script>
+	<script type="text/javascript" src="coffee/ComponentJS/component.js"></script>
+	<script type="text/javascript" src="coffee/ComponentJS/document.js"></script>
+	<script type="text/javascript" src="coffee/ComponentJS/event.js"></script>
+
+	<script type="text/javascript" src="coffee/main.js"></script>
+	<script type="text/javascript" src="coffee/canvas.js"></script>
+	<script type="text/javascript" src="coffee/document.js"></script>
+	<script type="text/javascript" src="coffee/toolbar.js"></script>
+	<script type="text/javascript" src="coffee/object_list.js"></script>
+	<script type="text/javascript" src="coffee/property_list.js"></script>
+	<script type="text/javascript" src="coffee/property_list_cube.js"></script>
 </head>
 <body>
-
+	<div id="document"></div>
+	<script type="text/javascript">
+		var doc = new Bulb.Document('document');
+		doc.render();
+	</script>
 </body>
 </html>

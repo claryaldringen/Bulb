@@ -16,6 +16,7 @@
   ],
   "dependencies": {
     "threejs": "*",
-    "requirejs": "~2.1.9"
+    "requirejs": "~2.1.9",
+    "jquery": "~2.1.1"
   }
 }
