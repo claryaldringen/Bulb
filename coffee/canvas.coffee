@@ -41,15 +41,20 @@ class Bulb.Canvas extends CJS.Component
 		@getScene().add(light)
 		@restoreView()
 
+	getMaterials: ->
+		[
+			new THREE.MeshLambertMaterial({opacity:0.9, color: 0xFFFFFF, transparent: yes})
+		  new THREE.MeshBasicMaterial({color: 0xFFFFFF, wireframe: yes})
+		]
+
 	addSphere: ->
-		sphereMaterial = new THREE.MeshLambertMaterial({color: 0xCC0000})
-		sphere = new THREE.Mesh(new THREE.SphereGeometry(5,16,16), sphereMaterial)
+		sphere = THREE.SceneUtils.createMultiMaterialObject(new THREE.SphereGeometry(5,16,16), @getMaterials())
 		sphere.name = 'Sphere'
 		@getScene().add(sphere)
 		@restoreView()
 
 	addCube: ->
-		cube = new THREE.Mesh(new THREE.BoxGeometry(10,10,10,1,1,1),  new THREE.MeshLambertMaterial({color: 0xFF0000}))
+		cube = THREE.SceneUtils.createMultiMaterialObject(new THREE.BoxGeometry(10,10,10,1,1,1), @getMaterials())
 		cube.name = 'Cube'
 		@getScene().add(cube)
 		@restoreView()
@@ -62,9 +67,10 @@ class Bulb.Canvas extends CJS.Component
 	replaceObject: (id, params) ->
 		scene = @getScene()
 		object = scene.getObjectById(id)
-		geometry = new THREE.BoxGeometry(params.width, params.height, params.depth, params.widthSegments, params.heightSegments, params.depthSegments) if object.geometry instanceof THREE.BoxGeometry
-		geometry = new THREE.SphereGeometry(params.radius, params.widthSegments, params.heightSegments, params.phiStart, params.phiLength, params.thetaStart, params.thetaLength) if object.geometry instanceof THREE.SphereGeometry
-		newObject  = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: 0xFF0000}))
+		geometry = object.children[0].geometry
+		geometry = new THREE.BoxGeometry(params.width, params.height, params.depth, params.widthSegments, params.heightSegments, params.depthSegments) if geometry instanceof THREE.BoxGeometry
+		geometry = new THREE.SphereGeometry(params.radius, params.widthSegments, params.heightSegments, params.phiStart, params.phiLength, params.thetaStart, params.thetaLength) if geometry instanceof THREE.SphereGeometry
+		newObject  = THREE.SceneUtils.createMultiMaterialObject(geometry, @getMaterials())
 		newObject.parent = object.parent
 		newObject.name = object.name
 		scene.children[index] = newObject  for child,index in scene.children when child is object

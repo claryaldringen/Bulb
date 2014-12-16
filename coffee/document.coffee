@@ -37,8 +37,8 @@ class Bulb.Document extends CJS.Document
 			.setPosition(object.position)
 			.setRotation(object.rotation)
 			.setScale(object.scale)
-			.setGeometry(object.geometry.parameters)
-			.setVertices(object.geometry.vertices)
+			.setGeometry(object.children[0].geometry.parameters)
+			.setVertices(object.children[0].geometry.vertices)
 			.render()
 
 	geometryChange: (propertyList) ->
@@ -46,7 +46,7 @@ class Bulb.Document extends CJS.Document
 		params = propertyList.getGeometry()
 		object = @getCanvas().replaceObject(objectList.getSelectedItemId(), params)
 		objectList.setSelectedItemId(object.id).render()
-		propertyList.setVertices(object.geometry.vertices).render()
+		propertyList.setVertices(object.children[0].geometry.vertices).render()
 		@propertyChange(propertyList)
 
 	propertyChange: (propertyList) ->
@@ -62,8 +62,9 @@ class Bulb.Document extends CJS.Document
 
 		vectors = []
 		vectors.push(new THREE.Vector3(vertice.x, vertice.y, vertice.z)) for vertice in vertices
-		object.geometry.vertices = vectors
-		object.geometry.verticesNeedUpdate = yes
+		object.children.forEach (child) ->
+			child.geometry.vertices = vectors
+			child.geometry.verticesNeedUpdate = yes
 
 		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
 		canvas.restoreView()
