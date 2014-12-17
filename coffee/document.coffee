@@ -11,7 +11,17 @@ class Bulb.Document extends CJS.Document
 
 	getToolbar: ->
 		toolbar = @getChildById('toolbar')
-		toolbar = new Bulb.Toolbar('toolbar', @) if not toolbar?
+		if not toolbar?
+			canvas = @getCanvas()
+			toolbar = new Bulb.Toolbar('toolbar', @)
+			toolbar.getEvent('addCircle').subscribe(canvas, canvas.addCircle)
+			toolbar.getEvent('addPlane').subscribe(canvas, canvas.addPlane)
+			toolbar.getEvent('addCube').subscribe(canvas, canvas.addCube)
+			toolbar.getEvent('addSphere').subscribe(canvas, canvas.addSphere)
+			toolbar.getEvent('addCylinder').subscribe(canvas, canvas.addCylinder)
+			toolbar.getEvent('addDodecahedron').subscribe(canvas, canvas.addDodecahedron)
+			toolbar.getEvent('addTorus').subscribe(canvas, canvas.addTorus)
+			toolbar.getEvent('addLight').subscribe(canvas, canvas.addLight)
 		toolbar
 
 	getObjectList: ->
@@ -74,9 +84,6 @@ class Bulb.Document extends CJS.Document
 		super()
 		canvas = @getCanvas()
 		objectList = @getObjectList()
-		@getToolbar().getEvent('addCube').subscribe(canvas, canvas.addCube)
-		@getToolbar().getEvent('addSphere').subscribe(canvas, canvas.addSphere)
-		@getToolbar().getEvent('addLight').subscribe(canvas, canvas.addLight)
 		canvas.getEvent('change').subscribe(objectList, objectList.restore)
 		objectList.getEvent('remove').subscribe(canvas, canvas.remove)
 		objectList.getEvent('select').subscribe(@, @selectObject)

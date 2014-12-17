@@ -44,20 +44,28 @@ class Bulb.Canvas extends CJS.Component
 	getMaterials: ->
 		[
 			new THREE.MeshLambertMaterial({opacity:0.9, color: 0xFFFFFF, transparent: yes})
-		  new THREE.MeshBasicMaterial({color: 0xFFFFFF, wireframe: yes})
+			new THREE.MeshBasicMaterial({color: 0xFFFFFF, wireframe: yes})
 		]
 
-	addSphere: ->
-		sphere = THREE.SceneUtils.createMultiMaterialObject(new THREE.SphereGeometry(5,16,16), @getMaterials())
-		sphere.name = 'Sphere'
-		@getScene().add(sphere)
+	addObject: (geometry, name) ->
+		object = THREE.SceneUtils.createMultiMaterialObject(geometry, @getMaterials())
+		object.name = name
+		@getScene().add(object)
 		@restoreView()
 
-	addCube: ->
-		cube = THREE.SceneUtils.createMultiMaterialObject(new THREE.BoxGeometry(10,10,10,1,1,1), @getMaterials())
-		cube.name = 'Cube'
-		@getScene().add(cube)
-		@restoreView()
+	addCircle: -> @addObject(new THREE.CircleGeometry(5, 32), 'Circle')
+
+	addPlane: -> @addObject(new THREE.PlaneGeometry(10,10), 'Plane')
+
+	addSphere: -> @addObject(new THREE.SphereGeometry(5,16,16), 'Sphere')
+
+	addCube: -> @addObject(new THREE.BoxGeometry(10,10,10,1,1,1), 'Cube')
+
+	addCylinder: -> @addObject(new THREE.CylinderGeometry(5,5,10), 'Cylinder')
+
+	addDodecahedron: -> @addObject(new THREE.DodecahedronGeometry(5), 'Dodecahedron')
+
+	addTorus: -> @addObject(new THREE.TorusGeometry(5,2,8,8), 'Torus')
 
 	remove: (objectId) ->
 		scene = @getScene()
