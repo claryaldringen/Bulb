@@ -18,6 +18,15 @@ class CJS.Component
 
 	getChildById: (id) -> @children[id]
 
+	findChildById: (id) ->
+		ids = id.split('_')
+		child = @
+		for id in ids
+			id = lastId + '_' + id if lastId?
+			child = child.getChildById(id)
+			lastId = id
+		child
+
 	setBaseUrl: (@baseUrl) -> @
 
 	getEvent: (event) ->

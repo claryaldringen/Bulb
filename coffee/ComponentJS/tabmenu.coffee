@@ -14,7 +14,7 @@ class CJS.TabMenu extends CJS.Component
 		@
 
 	click: (element) ->
-		if element.className is 'doChangeTab'
+		if element.hasClass('doChangeTab')
 			for tab in @tabs
 				if tab.id is element.dataset.id then tab.selected = yes else tab.selected = no
 			@getEvent('change').fire(@)

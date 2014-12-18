@@ -25,9 +25,9 @@ class Bulb.Document extends CJS.Document
 		toolbar
 
 	getObjectList: ->
-		objectList = @getChildById('object_list');
+		objectList = @getChildById('objectList');
 		if not objectList?
-			objectList = new Bulb.ObjectList('object_list', @)
+			objectList = new Bulb.ObjectList('objectList', @)
 			objectList.setItems(@getCanvas().getScene().children)
 		objectList
 
@@ -43,12 +43,19 @@ class Bulb.Document extends CJS.Document
 	propertyTabChange: (tabMenu) ->
 		tab = tabMenu.getSelectedTab()
 		id = tabMenu.getChildId(tab.id)
-		childId = tabMenu.getChildById(id)
-		if not childId?
-			switch tab.id
-				when 'mesh' then new Bulb.MeshPropertyList(id, tabMenu)
-				when 'geometry' then new Bulb.GeometryPropertyList(id, tabMenu)
-				when 'vertices' then new Bulb.VertexList(id, tabMenu)
+		child = tabMenu.getChildById(id)
+		switch tab.id
+			when 'mesh'
+				if not child?
+					child = new Bulb.MeshPropertyList(id, tabMenu)
+					child.getEvent('change').subscribe(@, @meshChange)
+				object = @getCanvas().getScene().getObjectById(@getObjectList().getSelectedItemId())
+				object = {position: null, rotation: null} if not object?
+				child.setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
+			when 'geometry'
+				child = new Bulb.GeometryPropertyList(id, tabMenu) if not child?
+			when 'vertices'
+				child = new Bulb.VertexList(id, tabMenu) if not child?
 
 	getProperties: ->
 		properties = @getChildById('properties')
@@ -59,15 +66,9 @@ class Bulb.Document extends CJS.Document
 		properties
 
 	selectObject: (objectList) ->
-		object = @getCanvas().getScene().getObjectById(objectList.getSelectedItemId())
-		object = {position: null, rotation: null} if not object?
-		@getPropertyList()
-			.setPosition(object.position)
-			.setRotation(object.rotation)
-			.setScale(object.scale)
-			.setGeometry(object.children[0].geometry.parameters)
-			.setVertices(object.children[0].geometry.vertices)
-			.render()
+		properties = @getProperties()
+		@propertyTabChange(properties)
+		properties.render()
 
 	geometryChange: (propertyList) ->
 		objectList = @getObjectList()
@@ -77,26 +78,25 @@ class Bulb.Document extends CJS.Document
 		propertyList.setVertices(object.children[0].geometry.vertices).render()
 		@propertyChange(propertyList)
 
-	propertyChange: (propertyList) ->
-		position = propertyList.getPosition()
-		rotation = propertyList.getRotation()
-		scale = propertyList.getScale()
-		vertices = propertyList.getVertices()
+	meshChange: (meshPropertyList) ->
+		position = meshPropertyList.getPosition()
+		rotation = meshPropertyList.getRotation()
+		scale = meshPropertyList.getScale()
 		canvas = @getCanvas()
 		object = canvas.getScene().getObjectById(@getObjectList().getSelectedItemId())
 		object.position.set(position.x, position.y, position.z)
 		object.rotation.set(rotation.x, rotation.y, rotation.z)
 		object.scale.set(scale.x, scale.y, scale.z)
+		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
+		canvas.restoreView()
+		propertyList
 
+	vertexChange: (vertexList) ->
 		vectors = []
 		vectors.push(new THREE.Vector3(vertice.x, vertice.y, vertice.z)) for vertice in vertices
 		object.children.forEach (child) ->
 			child.geometry.vertices = vectors
 			child.geometry.verticesNeedUpdate = yes
-
-		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
-		canvas.restoreView()
-		propertyList
 
 	bindEvents: ->
 		super()
@@ -115,7 +115,7 @@ class Bulb.Document extends CJS.Document
 		html += '<div id="' + canvas.getId() + '">' + canvas.getHtml() + '</div>'
 
 		objectList = @getObjectList()
-		html += '<div id="object_list">' + objectList.getHtml() + '</div>'
+		html += '<div id="objectList">' + objectList.getHtml() + '</div>'
 
 		#object = canvas.getScene().getObjectById(objectList.getSelectedItemId())
 		#propertyList = @getPropertyList(object?.geometry)
