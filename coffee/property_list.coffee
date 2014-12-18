@@ -1,5 +1,10 @@
 
-class Bulb.PropertyList extends CJS.Component
+class Bulb.PropertyList extends CJS.TabMenu
+
+	getBasicProperties: ->
+		basicProperties = @getChildById('basic_properties')
+		basicProperties = new Bulb.BasicProperties('basic_properties', @)
+		basicProperties
 
 	setPosition: (@position) -> @
 

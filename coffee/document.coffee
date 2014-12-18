@@ -31,14 +31,32 @@ class Bulb.Document extends CJS.Document
 			objectList.setItems(@getCanvas().getScene().children)
 		objectList
 
-	getPropertyList:  ->
-		propertyList = @getChildById('properties')
-		if not propertyList
-			propertyList = new Bulb.PropertyList('properties')
-			propertyList.getEvent('changeGeometry').subscribe(@, @geometryChange)
-			propertyList.getEvent('change').subscribe(@, @propertyChange)
-			propertyList.setParent(@)
-		propertyList
+#	getPropertyList:  ->
+#		propertyList = @getChildById('properties')
+#		if not propertyList
+#			propertyList = new Bulb.PropertyList('properties')
+#			propertyList.getEvent('changeGeometry').subscribe(@, @geometryChange)
+#			propertyList.getEvent('change').subscribe(@, @propertyChange)
+#			propertyList.setParent(@)
+#		propertyList
+
+	propertyTabChange: (tabMenu) ->
+		tab = tabMenu.getSelectedTab()
+		id = tabMenu.getChildId(tab.id)
+		childId = tabMenu.getChildById(id)
+		if not childId?
+			switch tab.id
+				when 'mesh' then new Bulb.MeshPropertyList(id, tabMenu)
+				when 'geometry' then new Bulb.GeometryPropertyList(id, tabMenu)
+				when 'vertices' then new Bulb.VertexList(id, tabMenu)
+
+	getProperties: ->
+		properties = @getChildById('properties')
+		if not properties
+			properties = new CJS.TabMenu('properties', @)
+			properties.addTab('mesh', 'Mesh', yes).addTab('geometry', 'Geometry').addTab('vertices', 'Vertices')
+			properties.getEvent('change').subscribe(@, @propertyTabChange).fire(properties)
+		properties
 
 	selectObject: (objectList) ->
 		object = @getCanvas().getScene().getObjectById(objectList.getSelectedItemId())
@@ -99,6 +117,7 @@ class Bulb.Document extends CJS.Document
 		objectList = @getObjectList()
 		html += '<div id="object_list">' + objectList.getHtml() + '</div>'
 
-		object = canvas.getScene().getObjectById(objectList.getSelectedItemId())
-		propertyList = @getPropertyList(object?.geometry)
-		html += '<div id="properties">' + propertyList.getHtml() + '</div>'
+		#object = canvas.getScene().getObjectById(objectList.getSelectedItemId())
+		#propertyList = @getPropertyList(object?.geometry)
+		properties = @getProperties()
+		html += '<div id="properties">' + properties.getHtml() + '</div>'
