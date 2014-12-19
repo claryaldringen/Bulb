@@ -21,12 +21,14 @@ class CJS.TabMenu extends CJS.Component
 			@render()
 
 	getHtml: ->
-		html = ''
+		html = '<div class="tabBar">'
 		for tab in @tabs
 			selected = ''
 			if tab.selected
 				selected = 'selected'
 				childId = @getChildId(tab.id)
 			html += '<div class="' + selected + ' doChangeTab" data-id="' + tab.id + '">' + tab.label + '</div>'
+		html += '</div><div id="' + @id + '-content' + '">'
 		content = @getChildById(childId)
-		html += '<div id="' + content.id + '">' + content.getHtml() + '</div>'
+		html += '<div id="' + content.id + '">' + content.getHtml() + '</div></div>'
+

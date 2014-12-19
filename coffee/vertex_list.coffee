@@ -10,10 +10,10 @@ class Bulb.VertexList extends CJS.Component
 		@getEvent('change').fire(@)
 
 	getHtml: ->
-		html = '<table><tr><th>Vertices</th></tr>'
+		html = '<table><tr><th colspan="3">Vertices</th></tr>'
 		for vertex,index in @vertices
-			html += '<tr><td>'
+			html += '<tr>'
 			for axis in ['x','y','z']
-				html += '<input data-index="' + index + '" data-axis="' + axis + '" type="number" value="' + vertex[axis] + '">'
-			html += '</td></tr>'
+				html += '<td>' + axis.toUpperCase() + ': <input data-index="' + index + '" data-axis="' + axis + '" type="number" value="' + vertex[axis] + '"></td>'
+			html += '</tr>'
 		html += '</table>'

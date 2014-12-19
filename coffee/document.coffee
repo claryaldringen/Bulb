@@ -31,31 +31,28 @@ class Bulb.Document extends CJS.Document
 			objectList.setItems(@getCanvas().getScene().children)
 		objectList
 
-#	getPropertyList:  ->
-#		propertyList = @getChildById('properties')
-#		if not propertyList
-#			propertyList = new Bulb.PropertyList('properties')
-#			propertyList.getEvent('changeGeometry').subscribe(@, @geometryChange)
-#			propertyList.getEvent('change').subscribe(@, @propertyChange)
-#			propertyList.setParent(@)
-#		propertyList
-
 	propertyTabChange: (tabMenu) ->
 		tab = tabMenu.getSelectedTab()
 		id = tabMenu.getChildId(tab.id)
 		child = tabMenu.getChildById(id)
+		object = @getCanvas().getScene().getObjectById(@getObjectList().getSelectedItemId())
 		switch tab.id
 			when 'mesh'
 				if not child?
 					child = new Bulb.MeshPropertyList(id, tabMenu)
 					child.getEvent('change').subscribe(@, @meshChange)
-				object = @getCanvas().getScene().getObjectById(@getObjectList().getSelectedItemId())
 				object = {position: null, rotation: null} if not object?
 				child.setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
 			when 'geometry'
-				child = new Bulb.GeometryPropertyList(id, tabMenu) if not child?
+				if not child?
+					child = new Bulb.GeometryPropertyList(id, tabMenu)
+					child.getEvent('change').subscribe(@, @geometryChange)
+				child.setGeometry(object.children[0].geometry.parameters)
 			when 'vertices'
-				child = new Bulb.VertexList(id, tabMenu) if not child?
+				if not child?
+					child = new Bulb.VertexList(id, tabMenu) if not child?
+					child.getEvent('change').subscribe(@, @vertexChange)
+				child.setVertices(object.children[0].geometry.vertices)
 
 	getProperties: ->
 		properties = @getChildById('properties')
@@ -73,10 +70,10 @@ class Bulb.Document extends CJS.Document
 	geometryChange: (propertyList) ->
 		objectList = @getObjectList()
 		params = propertyList.getGeometry()
-		object = @getCanvas().replaceObject(objectList.getSelectedItemId(), params)
+		canvas = @getCanvas()
+		object = canvas.replaceObject(objectList.getSelectedItemId(), params)
 		objectList.setSelectedItemId(object.id).render()
-		propertyList.setVertices(object.children[0].geometry.vertices).render()
-		@propertyChange(propertyList)
+		canvas.restoreView()
 
 	meshChange: (meshPropertyList) ->
 		position = meshPropertyList.getPosition()
@@ -89,16 +86,22 @@ class Bulb.Document extends CJS.Document
 		object.scale.set(scale.x, scale.y, scale.z)
 		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
 		canvas.restoreView()
-		propertyList
 
 	vertexChange: (vertexList) ->
 		vectors = []
-		vectors.push(new THREE.Vector3(vertice.x, vertice.y, vertice.z)) for vertice in vertices
+		vectors.push(new THREE.Vector3(vertex.x, vertex.y, vertex.z)) for vertex in vertexList.getVertices()
+		canvas = @getCanvas()
+		object = canvas.getScene().getObjectById(@getObjectList().getSelectedItemId())
 		object.children.forEach (child) ->
 			child.geometry.vertices = vectors
 			child.geometry.verticesNeedUpdate = yes
+		canvas.restoreView()
 
-	bindEvents: ->
+	renderFinish: ->
+		super()
+		document.getElementById('objectList').style.height = Math.round(window.innerHeight - 360) + 'px'
+
+		bindEvents: ->
 		super()
 		canvas = @getCanvas()
 		objectList = @getObjectList()
@@ -111,13 +114,13 @@ class Bulb.Document extends CJS.Document
 		toolbar = @getToolbar()
 		html = '<div id="' + toolbar.getId() + '">' + toolbar.getHtml() + '</div>'
 
+		html += '<div class="rightColumn">'
+		objectList = @getObjectList()
+		html += '<div id="' + objectList.getId() + '">' + objectList.getHtml() + '</div>'
+
+		properties = @getProperties()
+		html += '<div id="' + properties.getId() + '">' + properties.getHtml() + '</div>'
+		html += '</div>'
+
 		canvas = @getCanvas()
 		html += '<div id="' + canvas.getId() + '">' + canvas.getHtml() + '</div>'
-
-		objectList = @getObjectList()
-		html += '<div id="objectList">' + objectList.getHtml() + '</div>'
-
-		#object = canvas.getScene().getObjectById(objectList.getSelectedItemId())
-		#propertyList = @getPropertyList(object?.geometry)
-		properties = @getProperties()
-		html += '<div id="properties">' + properties.getHtml() + '</div>'

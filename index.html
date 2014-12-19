@@ -2,6 +2,8 @@
 <html>
 <head>
 	<title>Bulb</title>
+	<link rel="stylesheet" type="text/css" href="stylus/style.css">
+
 	<script type="text/javascript" src="bower_components/threejs/build/three.js"></script>
 	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 
@@ -25,6 +27,10 @@
 	<script type="text/javascript">
 		var doc = new Bulb.Document('document');
 		doc.render();
+
+		window.onresize = function() {
+			doc.render()
+		}
 	</script>
 </body>
 </html>

@@ -1,6 +1,10 @@
 
 class CJS.Document extends CJS.Component
 
+	constructor: (id, parent) ->
+		super(id, parent)
+		@binded = no
+
 	findId: (target) ->
 		if target.id? and target.id isnt ''
 			target.id.split('-')[0]
@@ -18,8 +22,11 @@ class CJS.Document extends CJS.Component
 		$('body').bind 'focusin', (event) => @addMethodHasClass(event.target).findChildById(@findId(event.target)).focusIn(event.target)
 		$('body').bind 'click', (event) => @addMethodHasClass(event.target).findChildById(@findId(event.target)).click(event.target)
 		$('body').bind 'change', (event) => @addMethodHasClass(event.target).findChildById(@findId(event.target)).change(event.target)
+		$('body').bind 'resize', (event) => @addMethodHasClass(event.target).findChildById(@findId(event.target)).resize(event.target)
 
 	render: ->
 		super()
-		@bindEvents()
+		if not @binded
+			@bindEvents()
+			@binded = yes
 		@

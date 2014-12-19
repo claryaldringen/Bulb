@@ -46,6 +46,8 @@ class CJS.Component
 
 	change: ->
 
+	resize: ->
+
 	render: ->
 		document.getElementById(@id).innerHTML = @getHtml()
 		@renderFinish()

@@ -15,12 +15,13 @@ class Bulb.ObjectList extends CJS.Component
 				@selectedItemId = null
 				@getEvent('select').fire(@)
 			@getEvent('remove').fire(element.dataset.id)
-		if element.className is 'doSelect'
+		if element.hasClass('doSelect')
 			@selectedItemId = element.dataset.id*1
 			@getEvent('select').fire(@)
+		@render()
 
 	getHtml: ->
 		html = '<div><ul>'
 		for item in @items
-			html += '<li><span data-id="' + item.id + '" class="doSelect">' + item.name + '</span><span data-id="' + item.id + '" class="doRemove">X</span></li>'
+			html += '<li data-id="' + item.id + '" class="' + (if @selectedItemId is item.id then 'doSelect selected' else 'doSelect') + '">' + item.name + '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove"></li>'
 		html += '</ul></div>'

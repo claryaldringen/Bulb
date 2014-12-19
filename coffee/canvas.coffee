@@ -1,9 +1,13 @@
 
 class Bulb.Canvas extends CJS.Component
 
+	getWidth: -> window.innerWidth - 345
+
+	getHeight: -> window.innerHeight - 20
+
 	getRenderer: ->
 		@renderer = new THREE.WebGLRenderer() if not @renderer?
-		@renderer.setSize(400, 300)
+		@renderer.setSize(@getWidth(), @getHeight())
 		@renderer
 
 	getScene: ->
@@ -25,7 +29,7 @@ class Bulb.Canvas extends CJS.Component
 
 	getCamera: ->
 		if not @camera?
-			@camera = new THREE.PerspectiveCamera(45, 400/300, 0.1, 10000)
+			@camera = new THREE.PerspectiveCamera(45, @getWidth()/@getHeight(), 0.1, 10000)
 			@camera.position.x = 0
 			@camera.position.y = 10
 			@camera.position.z = 50
@@ -81,6 +85,8 @@ class Bulb.Canvas extends CJS.Component
 		newObject  = THREE.SceneUtils.createMultiMaterialObject(geometry, @getMaterials())
 		newObject.parent = object.parent
 		newObject.name = object.name
+		newObject.position.set(object.position.x, object.position.y, object.position.z)
+		newObject.rotation.set(object.rotation.x, object.rotation.y, object.rotation.z)
 		scene.children[index] = newObject  for child,index in scene.children when child is object
 		newObject
 
