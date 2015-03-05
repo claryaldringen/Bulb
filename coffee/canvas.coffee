@@ -37,6 +37,19 @@ class Bulb.Canvas extends CJS.Component
 			@camera.name = 'Camera'
 		@camera
 
+	getTrackballControls: ->
+		if not @trackballControls?
+			@trackballControls = new THREE.TrackballControls(@getCamera())
+			@trackballControls.rotateSpeed = 1.0
+			@trackballControls.panSpeed = 1.0
+			@trackballControls.zoomSpeed = 1.0
+			@trackballControls.staticMoving = yes
+		@trackballControls
+
+	getClock: ->
+		@clock = new THREE.Clock() if not @clock?
+		@clock
+
 	addLight: ->
 		light = new THREE.PointLight(0xFFFFFF)
 		light.name = 'Point Light'
@@ -97,6 +110,9 @@ class Bulb.Canvas extends CJS.Component
 		renderer = @getRenderer()
 		scene = @getScene()
 		camera = @getCamera()
+		trackballControls = @getTrackballControls()
+		trackballControls.update(@getClock().getDelta())
+		window.requestAnimationFrame => @restoreView()
 		renderer.render(scene, camera)
 		@getEvent('change').fire(@)
 		@
