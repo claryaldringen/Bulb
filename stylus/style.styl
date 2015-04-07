@@ -1,71 +1,157 @@
 
 body
 	font-family Arial
+	margin 0
+	padding 0
+	font-size 12px
 
 	input[type="number"]
-		width 50px
+		width 60px
 
 	div#document
 
 		div#toolbar
-			float left
-			margin-right 5px
+			position absolute
+			background #CCC
+			left 10px
+			top 10px
+			width 100px
+			top 20px
+			border 1px outset
+			border-top-left-radius 8px
+			border-top-right-radius 8px
+			padding 0px
 
-			div
-				border solid 1px #000000
-				width 20px
-				height 20px
+			div.title
+				text-align center
+				font-weight bold
+				font-size 14px
+				padding 4px
+				height 17px
+				color #444
+				text-shadow 1px 1px #FFFFFF
+
+			div.button
+				float left
+				border solid 1px #CCC
+				width 16px
+				height 16px
 				padding 5px
 				cursor pointer
 
+			div.button:hover
+				border 1px outset
+
 		div.rightColumn
-			float right
+			position fixed
+			background #CCC
+			right 20px
+			top 20px
+			border 1px outset
+			border-top-left-radius 8px
+			border-top-right-radius 8px
+			padding 0px
+
+			div.title
+				text-align center
+				font-weight bold
+				font-size 14px
+				padding 4px
+				height 17px
+				color #444
+				text-shadow 1px 1px #FFFFFF
 
 			div#objectList
-				border solid 1px #000000
-				padding 0px 15px 0px 0px
-				overflow auto
-				height 50%
+				border inset 1px
+				margin 2px
+				padding 0px 0px 0px 0px
 
-				ul
-					list-style none
-					padding 0px
+				div
+					background #FFFFFF
+					border solid 1px #444
+					height 250px
+					overflow auto
 
-					li
-						cursor pointer
-						width 250px
-						height 20px
-						padding 5px 5px 3px 5px
+					ul
+						margin 0px
+						padding 0px
+						list-style-type none
 
-						img
-							float right
+						li
+							cursor pointer
+							width 98%
+							padding 4px 1% 4px 1%
 
-					li.selected
-							background Highlight
+							img
+								float right
+
+						li.selected
+							background #000088
+							color #FFF
 
 			div#properties
-				margin-top 5px
+				margin 5px 0px 0px 0px
 				padding-top 3px
-				width 270px
-				border solid 1px #000000
+				width 275px
 
 				div.tabBar
 					width 100%
 					height 23px
-					border-bottom solid 1px #000000
+					border-bottom solid 1px #808080
+
 
 					div.doChangeTab
 						float left
-						border solid 1px #000000
-						padding 2px
+						border 1px outset
+						padding 4px 8px 4px 8px
 						cursor pointer
-						border-top-left-radius 3px
-						border-top-right-radius 3px
+						border-top-left-radius 5px
+						border-top-right-radius 5px
+						color #808080
+						background #DDD
 
 					div.selected
-						border-bottom solid 1px #FFFFFF
+						color #000
+						background #CCC
+						border-bottom solid 1px #CCC
 
 				div#properties-content
 					overflow auto
-					height 300px
-					border solid 1px blue
+					height 250px
+					margin 3px
+
+					div#properties_vertices
+						height 245px
+						overflow auto
+
+					table
+						width 100%
+						border-collapse collapse
+
+						tr.highlighted
+						tr:hover
+							background #CCCCFF
+
+						tr.selected
+							background #000088
+
+							td
+								input
+									color #FFFFFF
+
+						tr
+							background #FFF
+
+							th
+								background linear-gradient(#CCC, #666);
+								border solid 1px #000
+
+							td
+								padding 0
+								border solid 1px #000
+
+								input
+									padding 2px
+									background none
+									border none
+									width 97%

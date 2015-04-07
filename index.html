@@ -8,6 +8,9 @@
 	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 
 	<script type="text/javascript" src="js/trackball_controls.js"></script>
+	<script type="text/javascript" src="js/transform_controls.js"></script>
+	<script type="text/javascript" src="js/obj_exporter.js"></script>
+	<script type="text/javascript" src="js/obj_loader.js"></script>
 
 	<script type="text/javascript" src="coffee/ComponentJS/core.js"></script>
 	<script type="text/javascript" src="coffee/ComponentJS/component.js"></script>
@@ -23,16 +26,15 @@
 	<script type="text/javascript" src="coffee/mesh_property_list.js"></script>
 	<script type="text/javascript" src="coffee/geometry_property_list.js"></script>
 	<script type="text/javascript" src="coffee/vertex_list.js"></script>
+	<script type="text/javascript" src="coffee/vertex_helper.js"></script>
+	<script type="text/javascript" src="coffee/vertex_control.js"></script>
+	<script type="text/javascript" src="coffee/object_collection.js"></script>
 </head>
 <body>
 	<div id="document"></div>
 	<script type="text/javascript">
 		var doc = new Bulb.Document('document');
 		doc.render();
-
-		window.onresize = function() {
-			doc.render()
-		}
 	</script>
 </body>
 </html>

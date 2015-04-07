@@ -6,7 +6,13 @@ class Bulb.Document extends CJS.Document
 
 	getCanvas: ->
 		canvas = @getChildById('canvas')
-		canvas = new Bulb.Canvas('canvas', @) if not canvas?
+		if not canvas?
+			canvas = new Bulb.Canvas('canvas', @)
+			canvas.getEvent('select').subscribe(@, @selectObjectFromCanvas)
+			canvas.getEvent('transform').subscribe(@, @transform)
+			canvas.getEvent('geometryChange').subscribe(@, @updateVertexList)
+			canvas.getEvent('vertexHighlight').subscribe(@, @highlightVertexList)
+			canvas.getEvent('vertexSelect').subscribe(@, @selectVertexList)
 		canvas
 
 	getToolbar: ->
@@ -14,21 +20,26 @@ class Bulb.Document extends CJS.Document
 		if not toolbar?
 			canvas = @getCanvas()
 			toolbar = new Bulb.Toolbar('toolbar', @)
+			toolbar.getEvent('doSave').subscribe(@, @save)
+			toolbar.getEvent('doLoad').subscribe(@, @load)
+			toolbar.getEvent('addVector').subscribe(canvas, canvas.addVector)
 			toolbar.getEvent('addCircle').subscribe(canvas, canvas.addCircle)
 			toolbar.getEvent('addPlane').subscribe(canvas, canvas.addPlane)
 			toolbar.getEvent('addCube').subscribe(canvas, canvas.addCube)
 			toolbar.getEvent('addSphere').subscribe(canvas, canvas.addSphere)
 			toolbar.getEvent('addCylinder').subscribe(canvas, canvas.addCylinder)
-			toolbar.getEvent('addDodecahedron').subscribe(canvas, canvas.addDodecahedron)
 			toolbar.getEvent('addTorus').subscribe(canvas, canvas.addTorus)
 			toolbar.getEvent('addLight').subscribe(canvas, canvas.addLight)
+			toolbar.getEvent('changeTransformMode').subscribe(canvas, canvas.setTransformMode)
+			toolbar.getEvent('changeTransformSpace').subscribe(canvas, canvas.setTransformSpace)
 		toolbar
 
 	getObjectList: ->
 		objectList = @getChildById('objectList');
 		if not objectList?
 			objectList = new Bulb.ObjectList('objectList', @)
-			objectList.setItems(@getCanvas().getScene().children)
+			objectList.setItems(@getCanvas().getObjectCollection().getAsArray('objects'))
+			objectList.getEvent('select').subscribe(@, @selectObjectFromObjectList)
 		objectList
 
 	propertyTabChange: (tabMenu) ->
@@ -43,16 +54,22 @@ class Bulb.Document extends CJS.Document
 					child.getEvent('change').subscribe(@, @meshChange)
 				object = {position: null, rotation: null} if not object?
 				child.setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
+				@getCanvas().setMode(Bulb.MODE_MESH)
 			when 'geometry'
 				if not child?
 					child = new Bulb.GeometryPropertyList(id, tabMenu)
 					child.getEvent('change').subscribe(@, @geometryChange)
-				child.setGeometry(object.children[0].geometry.parameters)
+				child.setGeometry(object.geometry.parameters)
 			when 'vertices'
+				canvas = @getCanvas().setMode(Bulb.MODE_VERTICES)
 				if not child?
 					child = new Bulb.VertexList(id, tabMenu) if not child?
-					child.getEvent('change').subscribe(@, @vertexChange)
-				child.setVertices(object.children[0].geometry.vertices)
+					child.getEvent('change').subscribe(canvas, canvas.changeGeometry)
+					child.getEvent('highlight').subscribe(canvas, canvas.highlightVertex)
+					child.getEvent('dishighlight').subscribe(canvas, canvas.dishighlightVertex)
+					child.getEvent('select').subscribe(canvas, canvas.selectVector)
+				child.setVertices(object.geometry.vertices).setHighlighted().setSelected() if object?
+
 
 	getProperties: ->
 		properties = @getChildById('properties')
@@ -62,18 +79,32 @@ class Bulb.Document extends CJS.Document
 			properties.getEvent('change').subscribe(@, @propertyTabChange).fire(properties)
 		properties
 
-	selectObject: (objectList) ->
+	selectObjectFromCanvas: (selectedObjectId) ->
+		@getObjectList().setSelectedItemId(selectedObjectId).render()
 		properties = @getProperties()
 		@propertyTabChange(properties)
 		properties.render()
 
-	geometryChange: (propertyList) ->
-		objectList = @getObjectList()
-		params = propertyList.getGeometry()
-		canvas = @getCanvas()
-		object = canvas.replaceObject(objectList.getSelectedItemId(), params)
-		objectList.setSelectedItemId(object.id).render()
-		canvas.restoreView()
+	selectObjectFromObjectList: (selectedObjectId) ->
+		@getCanvas().selectObject(selectedObjectId, no)
+		properties = @getProperties()
+		@propertyTabChange(properties)
+		properties.render()
+
+	geometryChange: (propertyList) -> @getCanvas().replaceObject(propertyList.getGeometry())
+
+	updateVertexList: (object) ->
+		@getProperties().render()
+
+	highlightVertexList: (index) ->
+		properties = @getProperties()
+		properties.getChildById(properties.getChildId(properties.getSelectedTab().id)).setHighlighted(index)
+		properties.render()
+
+	selectVertexList: (index) ->
+		properties = @getProperties()
+		properties.getChildById(properties.getChildId(properties.getSelectedTab().id)).setSelected(index)
+		properties.render()
 
 	meshChange: (meshPropertyList) ->
 		position = meshPropertyList.getPosition()
@@ -87,34 +118,54 @@ class Bulb.Document extends CJS.Document
 		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
 		canvas.restoreView()
 
-	vertexChange: (vertexList) ->
-		vectors = []
-		vectors.push(new THREE.Vector3(vertex.x, vertex.y, vertex.z)) for vertex in vertexList.getVertices()
-		canvas = @getCanvas()
-		object = canvas.getScene().getObjectById(@getObjectList().getSelectedItemId())
-		object.children.forEach (child) ->
-			child.geometry.vertices = vectors
-			child.geometry.verticesNeedUpdate = yes
-		canvas.restoreView()
+	transform: (object) ->
+		tabMenu = @getProperties()
+		tab = tabMenu.getSelectedTab()
+		if tab.id is 'mesh'
+			id = tabMenu.getChildId(tab.id)
+			tabMenu.getChildById(id).setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
+		@
 
-	renderFinish: ->
-		super()
-		document.getElementById('objectList').style.height = Math.round(window.innerHeight - 360) + 'px'
+	save: ->
+		object = @getCanvas().getSelectedObject()
+		exporter = new THREE.OBJExporter()
+		output = exporter.parse(object)
+		blob = new Blob( [output], {type: 'text/plain' })
 
-		bindEvents: ->
+		link = document.createElement('a')
+		link.href = URL.createObjectURL(blob)
+		link.download = 'model.obj'
+		link.target = '_blank'
+		link.click()
+
+	load: ->
+
+		el = document.createElement('input')
+		el.type = 'file'
+		el.accept = '.obj'
+		el.addEventListener 'change', (event) =>
+			file = event.target.files[0]
+			reader = new FileReader()
+			reader.onload = (frEvent) =>
+				data = frEvent.target.result
+				loader = new THREE.OBJLoader()
+				@getCanvas().addLoadedObject(loader.parse(data))
+			reader.readAsText(file)
+		el.click()
+
+	bindEvents: ->
 		super()
 		canvas = @getCanvas()
 		objectList = @getObjectList()
-		canvas.getEvent('change').subscribe(objectList, objectList.restore)
+		canvas.getEvent('objectAdded').subscribe(objectList, objectList.restore)
 		objectList.getEvent('remove').subscribe(canvas, canvas.remove)
-		objectList.getEvent('select').subscribe(@, @selectObject)
-
+		window.addEventListener 'resize', => @getCanvas().resize()
 
 	getHtml: ->
 		toolbar = @getToolbar()
 		html = '<div id="' + toolbar.getId() + '">' + toolbar.getHtml() + '</div>'
 
-		html += '<div class="rightColumn">'
+		html += '<div class="rightColumn"><div class="title">Object List</div>'
 		objectList = @getObjectList()
 		html += '<div id="' + objectList.getId() + '">' + objectList.getHtml() + '</div>'
 

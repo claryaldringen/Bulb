@@ -46,7 +46,17 @@ class CJS.Component
 
 	change: ->
 
-	resize: ->
+	mouseDown: ->
+
+	mouseUp: ->
+
+	mouseWheel: ->
+
+	mouseOver: ->
+
+	mouseOut: ->
+
+	mouseMove: ->
 
 	render: ->
 		document.getElementById(@id).innerHTML = @getHtml()

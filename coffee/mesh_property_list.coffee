@@ -1,15 +1,27 @@
 
 class Bulb.MeshPropertyList extends CJS.Component
 
-	setPosition: (@position) -> @
+	getPositionId: (axis) -> @id + '-p-' + axis
+
+	getRotationId: (axis) -> @id + '-r-' + axis
+
+	getScaleId: (axis) -> @id + '-s-' + axis
+
+	setPosition: (@position) ->
+		document.getElementById(@getPositionId(axis))?.value = Math.round(value*100)/100 for axis,value of position
+		@
 
 	getPosition: -> @position
 
-	setRotation: (@rotation) -> @
+	setRotation: (@rotation) ->
+		document.getElementById(@getRotationId(axis))?.value = Math.round((180/Math.PI)*value*100)/100 for axis,value of rotation
+		@
 
-	getRotation: -> @rotation
+	getRotation: -> {x: @rotation.x/(180/Math.PI), y: @rotation.y/(180/Math.PI), z: @rotation.z/(180/Math.PI)}
 
-	setScale: (@scale) -> @
+	setScale: (@scale) ->
+		document.getElementById(@getScaleId(axis))?.value = Math.round(value*100)/100 for axis,value of scale
+		@
 
 	getScale: -> @scale
 
@@ -20,13 +32,12 @@ class Bulb.MeshPropertyList extends CJS.Component
 	getHtml: ->
 		html = ''
 		if @position? and @rotation?
-			html += '<table>'
-			html += '<tr><th>Position</th><th>Scale</th></tr>'
+			html += '<table><tr><th>&nbsp;</th><th>Position</th><th>Rotation</th><th>Scale</th></tr>'
 			for label, axis of {X: 'x',Y: 'y', Z: 'z'}
-				html += '<tr><td><label>' + label + ': <input data-type="position" data-axis="' + axis + '" type="number" value="' + @position[axis] + '"></label></td>'
-				html += '<td><label>' + label + ': <input data-type="scale" data-axis="' + axis + '" type="number" value="' + @scale[axis] + '"></label></td></tr>'
-			html += '<tr><th colspan="2">Rotation</th></tr>'
-			for label, axis of {X: 'x',Y: 'y', Z: 'z'}
-				html += '<tr><td colspan="2"><label>' + label + ': <input data-type="rotation" data-axis="' + axis + '" type="number" value="' + @rotation[axis] + '"></label></td></tr>'
+				html += '<tr><th>' + label + '</th>'
+				html += '<td><input id="' + @getPositionId(axis) + '" data-type="position" data-axis="' + axis + '" type="number" value="' + @position[axis] + '"></td>'
+				html += '<td><input id="' + @getRotationId(axis) + '" data-type="rotation" data-axis="' + axis + '" type="number" value="' + @rotation[axis] + '"></td>'
+				html += '<td><input id="' + @getScaleId(axis) + '" data-type="scale" data-axis="' + axis + '" type="number" value="' + @scale[axis] + '"></td>'
+				html += '</tr>'
 			html += '</table>'
 		html

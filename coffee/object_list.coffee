@@ -3,7 +3,7 @@ class Bulb.ObjectList extends CJS.Component
 
 	setItems: (@items) -> @
 
-	restore: (canvas) -> @setItems(canvas.getScene().children).render()
+	restore: (@items) -> @render()
 
 	getSelectedItemId: -> @selectedItemId
 
@@ -13,11 +13,11 @@ class Bulb.ObjectList extends CJS.Component
 		if element.className is 'doRemove'
 			if element.dataset.id*1 is @selectedItemId
 				@selectedItemId = null
-				@getEvent('select').fire(@)
+				@getEvent('select').fire(@selectedItemId)
 			@getEvent('remove').fire(element.dataset.id)
 		if element.hasClass('doSelect')
 			@selectedItemId = element.dataset.id*1
-			@getEvent('select').fire(@)
+			@getEvent('select').fire(@selectedItemId)
 		@render()
 
 	getHtml: ->
