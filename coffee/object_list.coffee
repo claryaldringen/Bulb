@@ -15,13 +15,24 @@ class Bulb.ObjectList extends CJS.Component
 				@selectedItemId = null
 				@getEvent('select').fire(@selectedItemId)
 			@getEvent('remove').fire(element.dataset.id)
+			@render()
 		if element.hasClass('doSelect')
 			@selectedItemId = element.dataset.id*1
 			@getEvent('select').fire(@selectedItemId)
-		@render()
+			document.querySelector('#' + @id + ' .selected')?.classList.remove('selected')
+			element.classList.add('selected')
+		if element.hasClass('doChange')
+			element.parentElement.classList.add('selected')
+
+	change: (element) -> @getEvent('rename').fire({id: element.dataset.id, value: element.value})
 
 	getHtml: ->
-		html = '<div><ul>'
+		html = '<div class="object_list"><ul>'
 		for item in @items
-			html += '<li data-id="' + item.id + '" class="' + (if @selectedItemId is item.id then 'doSelect selected' else 'doSelect') + '">' + item.name + '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove"></li>'
+			html += '<li data-id="' + item.id + '" class="' + (if @selectedItemId is item.id then 'doSelect selected' else 'doSelect') + '">'
+			html += '<input data-id="' + item.id + '"  class="doChange" type="text" value="' + item.name + '">'
+			html += '<div class="actions">'
+			html += '<img src="images/eye.png" data-id="' + item.id + '" class="doHide" title="Hide">&nbsp;'
+			html += '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove">'
+			html += '</div></li>'
 		html += '</ul></div>'

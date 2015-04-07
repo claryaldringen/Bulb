@@ -208,6 +208,10 @@ class Bulb.Canvas extends CJS.Component
 		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
 		@restoreView()
 
+	renameObject: (id, name) ->
+		@getScene().getObjectById(id*1, yes).name = name
+		@
+
 	replaceObject: (params) ->
 		@selectedObject.geometry.dispose()
 		switch @selectedObject.geometry.type

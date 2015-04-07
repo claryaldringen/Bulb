@@ -40,6 +40,7 @@ class Bulb.Document extends CJS.Document
 			objectList = new Bulb.ObjectList('objectList', @)
 			objectList.setItems(@getCanvas().getObjectCollection().getAsArray('objects'))
 			objectList.getEvent('select').subscribe(@, @selectObjectFromObjectList)
+			objectList.getEvent('rename').subscribe(@, @renameObject)
 		objectList
 
 	propertyTabChange: (tabMenu) ->
@@ -125,6 +126,9 @@ class Bulb.Document extends CJS.Document
 			id = tabMenu.getChildId(tab.id)
 			tabMenu.getChildById(id).setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
 		@
+
+	renameObject: (params) ->
+		@getCanvas().renameObject(params.id, params.value)
 
 	save: ->
 		object = @getCanvas().getSelectedObject()
