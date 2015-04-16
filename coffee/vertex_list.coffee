@@ -38,13 +38,17 @@ class Bulb.VertexList extends CJS.Component
 		@
 
 	getHtml: ->
-		html = '<table><tr><th>X</th><th>Y</th><th>Z</th></tr>'
-		for vertex,index in @vertices
-			cssClass = ''
-			if @highlightedIndex is index then cssClass = 'highlighted'
-			if @selectedIndex is index then cssClass = 'selected'
-			html += '<tr class="' + cssClass + '">'
-			for axis in ['x','y','z']
-				html += '<td><input class="doSelectVertex" data-index="' + index + '" data-axis="' + axis + '" type="number" value="' + Math.round(vertex[axis]*100)/100 + '" step="0.01"></td>'
-			html += '</tr>'
-		html += '</table>'
+		if @vertices?
+			html = '<table><tr><th>X</th><th>Y</th><th>Z</th></tr>'
+			for vertex,index in @vertices
+				cssClass = ''
+				if @highlightedIndex is index then cssClass = 'highlighted'
+				if @selectedIndex is index then cssClass = 'selected'
+				html += '<tr class="' + cssClass + '">'
+				for axis in ['x','y','z']
+					html += '<td><input class="doSelectVertex" data-index="' + index + '" data-axis="' + axis + '" type="number" value="' + Math.round(vertex[axis]*100)/100 + '" step="0.01"></td>'
+				html += '</tr>'
+			html += '</table>'
+		else
+			html = 'Please select some face.'
+		html

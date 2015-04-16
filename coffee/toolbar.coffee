@@ -3,6 +3,7 @@ class Bulb.Toolbar extends CJS.Component
 
 	click: (element) ->
 		@getEvent('doSave').fire() if element.hasClass('doSave')
+		@getEvent('doSaveAll').fire() if element.hasClass('doSaveAll')
 		@getEvent('doLoad').fire() if element.hasClass('doLoad')
 		@getEvent('addVector').fire() if element.hasClass('doAddVector')
 		@getEvent('addCircle').fire() if element.hasClass('doAddCircle')
@@ -19,6 +20,7 @@ class Bulb.Toolbar extends CJS.Component
 		html += '<div class="button doNew" title="New"><img src="./images/page_white.png" width="16" height="16"></div>'
 		html += '<div class="button doLoad" title="Import Object"><img src="./images/folder.png" width="16" height="16"></div>'
 		html += '<div class="button doSave" title="Export Object"><img src="./images/disk.png" width="16" height="16"></div>'
+		html += '<div class="button doSaveAll" title="Export Scene"><img src="./images/disk_multiple.png" width="16" height="16"></div>'
 		html += '<div class="button doAddVector" title="Vector"><img src="./images/vector.png" width="16" height="16"></div>'
 		html += '<div class="button doAddCircle" title="Circle"><img src="./images/circle.png" width="16" height="16"></div>'
 		html += '<div class="button doAddPlane" title="Plane"><img src="./images/plane.png" width="16" height="16"></div>'

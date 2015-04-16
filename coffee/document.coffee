@@ -20,7 +20,8 @@ class Bulb.Document extends CJS.Document
 		if not toolbar?
 			canvas = @getCanvas()
 			toolbar = new Bulb.Toolbar('toolbar', @)
-			toolbar.getEvent('doSave').subscribe(@, @save)
+			toolbar.getEvent('doSave').subscribe(@, @exportObject)
+			toolbar.getEvent('doSaveAll').subscribe(@, @exportScene)
 			toolbar.getEvent('doLoad').subscribe(@, @load)
 			toolbar.getEvent('addVector').subscribe(canvas, canvas.addVector)
 			toolbar.getEvent('addCircle').subscribe(canvas, canvas.addCircle)
@@ -47,7 +48,7 @@ class Bulb.Document extends CJS.Document
 		tab = tabMenu.getSelectedTab()
 		id = tabMenu.getChildId(tab.id)
 		child = tabMenu.getChildById(id)
-		object = @getCanvas().getScene().getObjectById(@getObjectList().getSelectedItemId())
+		object = @getCanvas().getSelectedObject()
 		switch tab.id
 			when 'mesh'
 				if not child?
@@ -69,7 +70,7 @@ class Bulb.Document extends CJS.Document
 					child.getEvent('highlight').subscribe(canvas, canvas.highlightVertex)
 					child.getEvent('dishighlight').subscribe(canvas, canvas.dishighlightVertex)
 					child.getEvent('select').subscribe(canvas, canvas.selectVector)
-				child.setVertices(object.geometry.vertices).setHighlighted().setSelected() if object?
+				child.setVertices([object.selectedVector]).setHighlighted().setSelected() if object.selectedVector?
 
 
 	getProperties: ->
@@ -103,8 +104,10 @@ class Bulb.Document extends CJS.Document
 		properties.render()
 
 	selectVertexList: (index) ->
+		object = @getCanvas().getSelectedObject()
+		if object.selectedVector? then vectors = [object.selectedVector] else vectors = []
 		properties = @getProperties()
-		properties.getChildById(properties.getChildId(properties.getSelectedTab().id)).setSelected(index)
+		properties.getChildById(properties.getChildId(properties.getSelectedTab().id)).setVertices(vectors)
 		properties.render()
 
 	meshChange: (meshPropertyList) ->
@@ -130,12 +133,20 @@ class Bulb.Document extends CJS.Document
 	renameObject: (params) ->
 		@getCanvas().renameObject(params.id, params.value)
 
-	save: ->
-		object = @getCanvas().getSelectedObject()
-		exporter = new THREE.OBJExporter()
-		output = exporter.parse(object)
-		blob = new Blob( [output], {type: 'text/plain' })
+	getExporter: ->
+		@exporter = new THREE.OBJExporter() if not @exporter?
+		@exporter
 
+	exportObject: -> @download(@getExporter().parse(@getCanvas().getSelectedObject()))
+
+	exportScene: ->
+		objects = @getCanvas().getObjectCollection().getAsArray('objects')
+		scene = new THREE.Scene()
+		scene.add(object) for object in objects
+		@download(@getExporter().parse(scene))
+
+	download: (output) ->
+		blob = new Blob( [output], {type: 'text/plain' })
 		link = document.createElement('a')
 		link.href = URL.createObjectURL(blob)
 		link.download = 'model.obj'
@@ -143,7 +154,6 @@ class Bulb.Document extends CJS.Document
 		link.click()
 
 	load: ->
-
 		el = document.createElement('input')
 		el.type = 'file'
 		el.accept = '.obj'

@@ -8,10 +8,7 @@ class CJS.Event
 		@listeners.push({func: func, obj: obj})
 		@
 
-	fire: ->
-		for listener in @listeners
-			#listener.func.call(listener.obj)
-			listener.func.apply(listener.obj, Array.prototype.slice.call(arguments))
+	fire: -> listener.func.apply(listener.obj, Array.prototype.slice.call(arguments)) for listener in @listeners
 
 
 

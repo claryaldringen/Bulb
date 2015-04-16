@@ -1,41 +1,26 @@
 
-class Bulb.VertexControl extends THREE.Object3D
+class Bulb.VertexControl extends Bulb.VertexHelper
 
-	constructor: (@camera, domElement) ->
-		super()
-		@arrows = []
-		@planes = []
-		@arrowIndex = null
-		@worldPosition = new THREE.Vector3()
-		@space = 'world'
-		domElement.addEventListener "mousedown", (event) => @onPointerDown(event)
-		domElement.addEventListener "mousemove", (event) => @onPointerMove(event)
-		domElement.addEventListener "mouseup", (event) => @onPointerUp(event)
-		@init()
-
-	setSpace: (@space) ->
-		@dispatchEvent({type: 'change'})
-		@update()
+	constructor: (@camera, @domElement) ->
+		@mouse = new THREE.Vector2()
+		super(@camera, @domElement)
 
 	init: ->
-		if not @children.length
-			length = 0.8
-			start = {'#FF0000': new THREE.Vector3(-length/3,0,0), '#00FF00': new THREE.Vector3(0,-length/3,0), '#0000FF': new THREE.Vector3(0,0,-length/3)}
-			for color,vector of {'#FF0000': new THREE.Vector3(1,0,0), '#00FF00': new THREE.Vector3(0,1,0), '#0000FF': new THREE.Vector3(0,0,1)}
-				arrow = new THREE.ArrowHelper(vector, start[color], length, color, length/3, length/8)
-				arrow.highlighted = no
-				@add(arrow)
-				@arrows.push(arrow)
-			planeGeometry = new THREE.PlaneGeometry( 50, 50, 2, 2 )
-			material = new THREE.MeshBasicMaterial( { wireframe: true } )
-			for index in [1..3]
-				plane = new THREE.Mesh(planeGeometry, material)
-				plane.visible = no
-				@planes.push(plane)
-				@add(plane)
-			@planes[1].rotation.set( 0, Math.PI/2, 0 )
-			@planes[2].rotation.set( - Math.PI/2, 0, 0 )
-		@update()
+		@planes = []
+		@binded = no
+		@createArrows().createPlanes().update() if not @children.length
+
+	createPlanes: ->
+		planeGeometry = new THREE.PlaneGeometry( 50, 50, 2, 2 )
+		material = new THREE.MeshBasicMaterial( { wireframe: true } )
+		for index in [1..3]
+			plane = new THREE.Mesh(planeGeometry, material)
+			plane.visible = no
+			@planes.push(plane)
+			@add(plane)
+		@planes[1].rotation.set( 0, Math.PI/2, 0 )
+		@planes[2].rotation.set( - Math.PI/2, 0, 0 )
+		@
 
 	getRaycaster: ->
 		@raycaster = new THREE.Raycaster() if not @raycaster?
@@ -50,7 +35,7 @@ class Bulb.VertexControl extends THREE.Object3D
 	getArrows: -> @arrows
 
 	highlight: (intersect) ->
-		colors = [0xff0000, 0x00ff00, 0x0000ff]
+		colors = [0xff0000, 0x00ff00, 0x0000ff, 0x800080]
 		for arrow,index in @arrows
 			if intersect? and arrow is intersect.object.parent
 				if not arrow.highlighted
@@ -64,9 +49,20 @@ class Bulb.VertexControl extends THREE.Object3D
 					@dispatchEvent({type: 'change'})
 		@
 
-	attach: (@vertex, @object) -> @update()
+	attach: (vertex, face, object) ->
+		if not @binded
+			@domElement.addEventListener "mousedown", (event) => @onPointerDown(event)
+			@domElement.addEventListener "mousemove", (event) => @onPointerMove(event)
+			@domElement.addEventListener "mouseup", (event) => @onPointerUp(event)
+			@binded = yes
+		super(vertex, face, object)
 
 	detach: ->
+		if @binded
+			@domElement.removeEventListener "mousedown", (event) => @onPointerDown(event)
+			@domElement.removeEventListener "mousemove", (event) => @onPointerMove(event)
+			@domElement.removeEventListener "mouseup", (event) => @onPointerUp(event)
+			@binded = no
 		@vertex = null
 		@object = null
 		@
@@ -83,10 +79,16 @@ class Bulb.VertexControl extends THREE.Object3D
 		@
 
 	move: (point) ->
-		axises = ['x','y','z']
 		sub = point.clone()
 		sub.sub(@point)
-		sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
+		if @arrowIndex is 3
+			length = sub.length()
+			sub = @getNormal().clone()
+			length *= -1 if point.length() - @point.length() < 0
+			sub.multiplyScalar(length)
+		else
+			axises = ['x','y','z']
+			sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
 		position = @vertex.clone()
 		position = @object.localToWorld(position) if @space is 'world'
 		position.add(sub)
@@ -98,27 +100,31 @@ class Bulb.VertexControl extends THREE.Object3D
 	onPointerDown: (event) ->
 		event.preventDefault()
 		event.stopPropagation()
-		mouse = new THREE.Vector2()
-		mouse.set(( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1)
+		@mouse.set(( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1)
 		raycaster = new THREE.Raycaster()
-		raycaster.setFromCamera(mouse, @camera)
+		raycaster.setFromCamera(@mouse, @camera)
 		intersects = raycaster.intersectObjects(@getArrows(), yes)
 		if intersects[0]?
 			@point = intersects[0].point.clone()
 			for arrow,index in @arrows when arrow is intersects[0].object.parent
 				@arrowIndex = index
+				@dispatchEvent({type: 'take'})
 				break
+			if @arrowIndex is 3
+				intersects = raycaster.intersectObjects(@planes, yes)
+				@point = intersects[0].point.clone()
+				@plane = intersects[0].object
 
 	onPointerMove: (event) ->
 		if @object? and @vertex?
 			raycaster = @getRaycaster()
-			mouse = new THREE.Vector2()
-			mouse.set(( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1)
-			raycaster.setFromCamera(mouse, @camera)
+			@mouse.set(( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1)
+			raycaster.setFromCamera(@mouse, @camera)
 			if @arrowIndex?
 				event.preventDefault()
 				event.stopPropagation()
-				point = raycaster.intersectObjects([@planes[@arrowIndex]], yes)[0]?.point
+				if @arrowIndex < 3 then objects = [@planes[@arrowIndex]] else objects = [@plane]
+				point = raycaster.intersectObjects(objects, yes)[0]?.point
 				if point?
 					@move(point)
 					@dispatchEvent({type: 'change'})
@@ -128,4 +134,5 @@ class Bulb.VertexControl extends THREE.Object3D
 	onPointerUp: (event) ->
 		@arrowIndex = null
 		@point = null
+		@dispatchEvent({type: 'let'})
 

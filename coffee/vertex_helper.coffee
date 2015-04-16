@@ -1,93 +1,70 @@
 
 class Bulb.VertexHelper extends THREE.Object3D
 
-	constructor: (@camera, domElement) ->
+	constructor: (@camera, @domElement) ->
 		super()
-		@visibleHelper = no
+		@arrows = []
 		@worldPosition = new THREE.Vector3()
-		domElement.addEventListener('mousemove',((event)=> @onPointerHover(event)), no)
-		domElement.addEventListener('click',((event)=> @onPointerClick(event)), no)
+		@space = 'world'
+		@init()
 
-	getRaycaster: ->
-		@raycaster = new THREE.Raycaster() if not @raycaster?
-		@raycaster
-
-	attach: (object) ->
-		if object isnt @object
-			@children = []
-			for vertex, index in object.geometry.vertices
-				helper = new THREE.Mesh(new THREE.SphereGeometry(0.05,1,1,1), new THREE.MeshBasicMaterial({color: 0xFFFF00, wireframe: yes}))
-				helper.position.set(vertex.x, vertex.y, vertex.z)
-				helper.visible = no
-				@add(helper)
-			@object = object
-			@update()
+	init: ->
+		@createArrows().update() if not @children.length
 		@
+
+	setSpace: (@space) ->
+		@dispatchEvent({type: 'change'})
+		@update()
+
+	createArrows: ->
+		length = 0.8
+		start = {'#FF0000': new THREE.Vector3(-length/3,0,0), '#00FF00': new THREE.Vector3(0,-length/3,0), '#0000FF': new THREE.Vector3(0,0,-length/3)}
+		for color,vector of {'#FF0000': new THREE.Vector3(1,0,0), '#00FF00': new THREE.Vector3(0,1,0), '#0000FF': new THREE.Vector3(0,0,1)}
+			arrow = new THREE.ArrowHelper(vector, start[color], length, color, length/3, length/8)
+			arrow.highlighted = no
+			@add(arrow)
+			@arrows.push(arrow)
+		@
+
+	getNormal: ->
+		vertices = @object.geometry.vertices
+		for key, index in ['a', 'b', 'c'] when vertices[@face[key]] is @vertex
+			normal = @face.vertexNormals[index]
+			break
+		normal
+
+	addNormalArrow: ->
+		length = 1
+		@remove(@arrows[3]) if @arrows[3]?
+		origin = new THREE.Vector3(0,0,0)
+		normal = @getNormal()
+		@arrows[3] = new THREE.ArrowHelper(normal, origin, length, 0x800080, length/3, length/10)
+		@arrows[3].highlighted = no
+		@add(@arrows[3])
+		@
+
+	getMatrix: ->
+		if not @matrix
+			@object.updateMatrixWorld()
+			@matrix = new THREE.Matrix4().getInverse(@object.matrixWorld)
+		@matrix
+
+	attach: (@vertex, @face, @object) ->
+		@addNormalArrow()
+		@update()
 
 	detach: ->
+		@vertex = null
 		@object = null
-
-	getVertexByHelperObject: (object) ->
-		for helper,index in @children when object is helper
-			return @object.geometry.vertices[index]
-		null
+		@
 
 	update: ->
-		if @object?
-			@position.set(@object.position.x, @object.position.y, @object.position.z)
-			@scale.set(@object.scale.x, @object.scale.y, @object.scale.z)
-			@rotation.set(@object.rotation.x, @object.rotation.y, @object.rotation.z)
+		if @object? and @vertex?
+			position = @vertex.clone()
+			position.applyMatrix4(@object.matrixWorld)
 			@worldPosition.setFromMatrixPosition(@object.matrixWorld)
 			scale = @worldPosition.distanceTo(@camera.position) / 6 * 0.5
-			for vertex, index in @object.geometry.vertices
-				@children[index].position.set(vertex.x, vertex.y, vertex.z)
-				@children[index].scale.set(scale, scale, scale)
+			@position.set(position.x, position.y, position.z)
+			@scale.set(scale, scale, scale)
+			if @space is 'local' then @rotation.copy(@object.rotation) else @rotation.set(0,0,0)
 		@
-
-	onPointerHover: (event) ->
-		if @object?
-			mouse = new THREE.Vector2()
-			mouse.set(( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1)
-			raycaster = @getRaycaster()
-			raycaster.setFromCamera(mouse, @camera)
-			intersects = raycaster.intersectObjects(@children)
-			if intersects[0]?
-				if not @visibleHelper
-					intersects[0].object.visible = yes
-					@dispatchEvent({type: 'change'})
-					@update()
-					@visibleHelper = yes
-			else
-				if @visibleHelper
-					@hide()
-					@dispatchEvent({type: 'change'})
-
-
-	onPointerClick: (event) ->
-		if @visibleHelper
-			event.preventDefault()
-			event.stopPropagation()
-			@dispatchEvent({type: 'select'})
-
-	getSelectedVector: ->
-		return vector for vector,index in @object.geometry.vertices when @children[index].visible
-		null
-
-	getSelectedVectorIndex: ->
-		return index for vector,index in @object.geometry.vertices when @children[index].visible
-		null
-
-	show: (vertex) ->
-		for vector,index in @object.geometry.vertices when vertex is vector
-			@children[index].visible = yes
-			@visibleHelper = yes
-			break
-		@
-
-	hide: ->
-		if @visibleHelper
-			helper.visible = no for helper in @children
-			@visibleHelper = no
-		@
-
-
