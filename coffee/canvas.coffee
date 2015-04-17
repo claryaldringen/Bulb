@@ -171,7 +171,8 @@ class Bulb.Canvas extends CJS.Component
 
 	addWireframeHelper: (key, object) ->
 		if not @wireframeHelper[key]?
-			helper = new THREE.WireframeHelper(object)
+			helper = new Bulb.WireframeHelper(0xffffff)
+			helper.attach(object)
 			helper.name = 'Wireframe Helper'
 			@wireframeHelper[key] = helper
 			@getScene().add(helper)
@@ -213,7 +214,8 @@ class Bulb.Canvas extends CJS.Component
 		@selectedObject.geometry.normalsNeedUpdate = yes
 		@selectedObject.geometry.computeFaceNormals()
 		@selectedObject.geometry.computeBoundingSphere()
-		@removeWireframeHelper('select').addWireframeHelper('select', @selectedObject).restoreView()
+		@wireframeHelper['select'].update()
+		@restoreView()
 		@
 
 

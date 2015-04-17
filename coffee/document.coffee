@@ -20,7 +20,7 @@ class Bulb.Document extends CJS.Document
 		if not toolbar?
 			canvas = @getCanvas()
 			toolbar = new Bulb.Toolbar('toolbar', @)
-			toolbar.getEvent('doSave').subscribe(@, @exportObject)
+			toolbar.getEvent('doSave').subscribe(@, => @getSaveDialog().open('Save...'))
 			toolbar.getEvent('doSaveAll').subscribe(@, @exportScene)
 			toolbar.getEvent('doLoad').subscribe(@, @load)
 			toolbar.getEvent('addVector').subscribe(canvas, canvas.addVector)
@@ -67,17 +67,17 @@ class Bulb.Document extends CJS.Document
 				if not child?
 					child = new Bulb.VertexList(id, tabMenu) if not child?
 					child.getEvent('change').subscribe(canvas, canvas.changeGeometry)
-					child.getEvent('highlight').subscribe(canvas, canvas.highlightVertex)
-					child.getEvent('dishighlight').subscribe(canvas, canvas.dishighlightVertex)
-					child.getEvent('select').subscribe(canvas, canvas.selectVector)
 				child.setVertices([object.selectedVector]).setHighlighted().setSelected() if object.selectedVector?
-
+			when 'userData'
+				if not child?
+					child = new Bulb.UserData(id, tabMenu) if not child?
+				child.setObject(object)
 
 	getProperties: ->
 		properties = @getChildById('properties')
 		if not properties
 			properties = new CJS.TabMenu('properties', @)
-			properties.addTab('mesh', 'Mesh', yes).addTab('geometry', 'Geometry').addTab('vertices', 'Vertices')
+			properties.addTab('mesh', 'Mesh', yes).addTab('geometry', 'Geometry').addTab('vertices', 'Vertices').addTab('userData', 'User Data')
 			properties.getEvent('change').subscribe(@, @propertyTabChange).fire(properties)
 		properties
 
@@ -137,19 +137,52 @@ class Bulb.Document extends CJS.Document
 		@exporter = new THREE.OBJExporter() if not @exporter?
 		@exporter
 
-	exportObject: -> @download(@getExporter().parse(@getCanvas().getSelectedObject()))
+	getSaveDialog: ->
+		child = @getChildById('saveDialog')
+		if not child?
+			child = new Bulb.SaveDialog('saveDialog', @)
+			child.addSaveType('Selected object', 'obj').addSaveType('All objects on scene', 'obj').addSaveType('Terrain settings', 'settings')
+			child.getEvent('save').subscribe(@, @export)
+		child
 
-	exportScene: ->
-		objects = @getCanvas().getObjectCollection().getAsArray('objects')
-		scene = new THREE.Scene()
-		scene.add(object) for object in objects
-		@download(@getExporter().parse(scene))
+	export: (saveTypeId, filename)->
+		switch saveTypeId
+			when 0
+				filename += '.obj'
+				output = @getCanvas().getSelectedObject()
+				output = @getExporter().parse(output)
+			when 1
+				filename += '.obj'
+				objects = @getCanvas().getObjectCollection().getAsArray('objects')
+				output = new THREE.Scene()
+				output.add(object) for object in objects
+				output = @getExporter().parse(output)
+			when 2
+				filename += '.settings'
+				objects = @getCanvas().getObjectCollection().getAsArray('objects')
+				output1 = "# models (filename reverseWinding scaleFactor translation)\n"
+				output2 = "# fluid and wind source (rate position size)\n"
+				output3 = "# material (sediment_change max_sediment_in_particle critical_shear)\n"
+				for object,i in objects
+					type = object.userData.type
+					if type is 'm'
+						output1 += type + ' ' + object.name + i + '.obj 0 '
+						output1 += object.scale.x + '/' + object.scale.y + '/' + object.scale.z + ' '
+						output1 += object.position.x + '/' + object.position.y + '/' + object.position.z + "\n"
 
-	download: (output) ->
+						output3 += 's'
+						output3 += ' ' + val for prop, val of object.userData.sediment
+						output3 += "\n"
+					else
+						output2 += type + ' ' + object.userData.rate + ' ' + object.position.x + '/' + object.position.y + '/' + object.position.z + "\n"
+				output = "# Scene settings\n----------------\n" + output1 + "\n" + output2 + "\n" + output3
+		@download(output, filename)
+
+	download: (output, filename) ->
 		blob = new Blob( [output], {type: 'text/plain' })
 		link = document.createElement('a')
 		link.href = URL.createObjectURL(blob)
-		link.download = 'model.obj'
+		link.download = filename
 		link.target = '_blank'
 		link.click()
 

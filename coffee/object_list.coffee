@@ -30,7 +30,7 @@ class Bulb.ObjectList extends CJS.Component
 		html = '<div class="object_list"><ul>'
 		for item in @items
 			html += '<li data-id="' + item.id + '" class="' + (if @selectedItemId is item.id then 'doSelect selected' else 'doSelect') + '">'
-			html += '<input data-id="' + item.id + '"  class="doChange" type="text" value="' + item.name + '">'
+			html += '<input data-id="' + item.id + '" class="doChange" type="text" value="' + item.name + '">'
 			html += '<div class="actions">'
 			html += '<img src="images/eye.png" data-id="' + item.id + '" class="doHide" title="Hide">&nbsp;'
 			html += '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove">'

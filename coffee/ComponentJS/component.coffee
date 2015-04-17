@@ -40,6 +40,22 @@ class CJS.Component
 		)
 		@
 
+	open: (@windowTitle = '', x = window.innerWidth/2, y = window.innerHeight/3)->
+		el = document.createElement('div')
+		el.id = @id
+		el.classList.add('window')
+		document.body.appendChild(el)
+		@render()
+		el.style.top = (y - el.clientHeight) + 'px'
+		el.style.left = (x - el.clientWidth/2) + 'px'
+		@
+
+	close: ->
+		if @windowTitle?
+			@windowTitle = null
+			document.body.removeChild(document.getElementById(@id))
+		@
+
 	click: ->
 
 	focusIn: ->
@@ -59,7 +75,10 @@ class CJS.Component
 	mouseMove: ->
 
 	render: ->
-		document.getElementById(@id).innerHTML = @getHtml()
+		html = ''
+		html += '<div class="title">' + @windowTitle + '</div>' if @windowTitle
+		html += @getHtml()
+		document.getElementById(@id).innerHTML = html
 		@renderFinish()
 		@restoreView()
 		@
