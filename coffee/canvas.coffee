@@ -21,7 +21,7 @@ class Bulb.Canvas extends CJS.Component
 					@getSelectControl().setSelectedObject(@selectedObject)
 				if mode is Bulb.MODE_MESH
 					@getSelectControl().deactivate()
-					controls.attach(@selectedObject)
+					controls.attach(@selectedObject) if not (@selectedObject instanceof THREE.Scene)
 					scene.add(controls)
 				@restoreView()
 			@mode = mode
@@ -67,6 +67,7 @@ class Bulb.Canvas extends CJS.Component
 		ambientLight = new THREE.AmbientLight(0x1C1C1C)
 		ambientLight.name = 'Ambient Light'
 		scene.add(ambientLight)
+		@selectedObject = scene
 		@addLight()
 
 	getCamera: ->
@@ -96,7 +97,10 @@ class Bulb.Canvas extends CJS.Component
 			@transformControls.setSnap(0.01).setScaleSpeed(50)
 			@transformControls.addEventListener 'change', =>
 				object = @transformControls.getAttached()
-				@getEvent('transform').fire(object) if object?
+				if object?
+					@getEvent('transform').fire(object)
+					@wireframeHelper['select'].update() if @wireframeHelper['select']?
+					@wireframeHelper['over'].update() if @wireframeHelper['over']?
 				@restoreView()
 			@transformControls.addEventListener 'mouseUp', => @transformed = yes
 		@transformControls
@@ -108,14 +112,12 @@ class Bulb.Canvas extends CJS.Component
 			@selectControl.getEvent('changeGeometry').subscribe @, =>
 				@changeGeometry()
 				@getEvent('geometryChange').fire(@selectedObject)
-			@selectControl.getEvent('selectVector').subscribe @, => @getEvent('vertexSelect').fire()
+			@selectControl.getEvent('selectVector').subscribe @, =>
+				@getSelectHelper().attach(@selectedObject)
+				@getEvent('vertexSelect').fire()
 		@selectControl
 
 	getSelectedObject: -> @selectedObject
-
-	getFaceHelper: ->
-		@faceHelper = new Bulb.FaceHelper(@getCamera(), document.getElementById(@id)) if not @faceHelper?
-		@faceHelper
 
 	addLight: ->
 		light = new THREE.PointLight(0xFFFFFF)
@@ -125,7 +127,7 @@ class Bulb.Canvas extends CJS.Component
 		@getScene().add(light)
 		@restoreView()
 
-	getMaterial: -> new THREE.MeshLambertMaterial({color: 0x999999, vertexColors: THREE.FaceColors})
+	getMaterial: -> new THREE.MeshLambertMaterial({color: 0x999999, vertexColors: THREE.FaceColors, transparent: yes, opacity: 0.9})
 
 	addLoadedObject: (object) ->
 		for child in object.children
@@ -145,9 +147,6 @@ class Bulb.Canvas extends CJS.Component
 		object.name = name
 		object.position.copy(position) if position?
 		@getScene().add(object)
-#		edges = new THREE.FaceNormalsHelper( object, 0.1, 0x00ff00, 1 )
-#		edges = new THREE.VertexNormalsHelper( object, 0.2, 0x800080, 1 )
-#		@getScene().add(edges)
 		@getObjectCollection().add('objects', object)
 		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
 		@restoreView()
@@ -169,10 +168,17 @@ class Bulb.Canvas extends CJS.Component
 		geometry.vertices.push(new THREE.Vector3(0,0,0))
 		@addObject(geometry, 'Vector')
 
+	getSelectHelper: ->
+		if not @selectHelper?
+			@selectHelper = new Bulb.SelectHelper(@getCamera())
+			@getScene().add(@selectHelper)
+		@selectHelper
+
+	getWireframeHelper: (key) -> @wireframeHelper[key]
+
 	addWireframeHelper: (key, object) ->
 		if not @wireframeHelper[key]?
-			helper = new Bulb.WireframeHelper(0xffffff)
-			helper.attach(object)
+			helper = new Bulb.WireframeHelper(object)
 			helper.name = 'Wireframe Helper'
 			@wireframeHelper[key] = helper
 			@getScene().add(helper)
@@ -187,6 +193,13 @@ class Bulb.Canvas extends CJS.Component
 	remove: (objectId) ->
 		scene = @getScene()
 		object = scene.getObjectById(objectId*1, yes)
+		if @selectedObject.id*1 is objectId*1
+			@getSelectControl().deactivate()
+			@selectedObject = @getScene()
+			@removeWireframeHelper('select')
+			control = @getTransformControls()
+			control.detach(control.getAttached())
+			@transformControls = null
 		scene.remove(object)
 		@getObjectCollection().remove('objects', object)
 		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
@@ -215,9 +228,9 @@ class Bulb.Canvas extends CJS.Component
 		@selectedObject.geometry.computeFaceNormals()
 		@selectedObject.geometry.computeBoundingSphere()
 		@wireframeHelper['select'].update()
+		@wireframeHelper['over'].update() if @wireframeHelper['over']?
 		@restoreView()
 		@
-
 
 	selectObject: (objectId, fireEvent = yes) ->
 		scene = @getScene()
@@ -235,12 +248,14 @@ class Bulb.Canvas extends CJS.Component
 		else
 			control.detach(control.getAttached())
 			scene.remove(control)
+			@selectedObject = scene
 			@getEvent('select').fire(null) if fireEvent
 		@restoreView()
 
 	mouseOverMesh: (event) ->
 		intersect = @getIntersect(event, @getObjectCollection().getAsArray('objects'))
 		if intersect?
+			@removeWireframeHelper('over') if intersect.object isnt @actualObject
 			@addWireframeHelper('over', intersect.object)
 			@actualObject = intersect.object
 		else
@@ -260,8 +275,7 @@ class Bulb.Canvas extends CJS.Component
 		switch @mode
 			when Bulb.MODE_MESH then @mouseOverMesh(event)
 
-	click: (element, event) ->
-		@selectObject(@actualObject?.id) if @mode is Bulb.MODE_MESH
+	click: (element, event) -> @selectObject(@actualObject?.id) if @mode is Bulb.MODE_MESH
 
 	resize: ->
 		camera = @getCamera()
@@ -284,7 +298,9 @@ class Bulb.Canvas extends CJS.Component
 			camera = @getCamera()
 			@transformControls.update() if @transformControls?
 			@vertexHelper.update() if @vertexHelper?
-			@vertexControl.update() if @vertexControl?
+			@selectControl.update() if @selectControl?
+			@selectHelper.update() if @selectHelper?
+			@wireframeHelper['select'].update() if @wireframeHelper['select']?
 			renderer.render(scene, camera)
 		@
 

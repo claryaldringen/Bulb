@@ -1,0 +1,6 @@
+<scene maximum_number_of_particles="2000" distance_limit_for_tesselation="100" max_sediment_in_particle="1.0">
+    <model src="cube.obj" reverse_winding="0" scale_factor="100/100/100" translation="0/0/0" />
+    <model src="lake.obj" reverse_winding="1" scale_factor="10/10/10" translation="0/0/0" />
+    <fluid_source rate="10" position="-20/-10/40" size="10/10/10" />
+    <wind_source rate="10" position="-20/-25/-10" size="40/1/39" />
+</scene>

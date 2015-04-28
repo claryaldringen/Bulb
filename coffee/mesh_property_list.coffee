@@ -1,6 +1,10 @@
 
 class Bulb.MeshPropertyList extends CJS.Component
 
+	constructor: (id, parent) ->
+		super(id, parent)
+		@rotation = {x: 0, y: 0, z: 0}
+
 	getPositionId: (axis) -> @id + '-p-' + axis
 
 	getRotationId: (axis) -> @id + '-r-' + axis
@@ -13,8 +17,10 @@ class Bulb.MeshPropertyList extends CJS.Component
 
 	getPosition: -> @position
 
-	setRotation: (@rotation) ->
-		document.getElementById(@getRotationId(axis))?.value = Math.round((180/Math.PI)*value*100)/100 for axis,value of rotation
+	setRotation: (rotation) ->
+		for axis,value of rotation
+			@rotation[axis] = Math.round((180/Math.PI)*value*100)/100
+			document.getElementById(@getRotationId(axis))?.value = @rotation[axis]
 		@
 
 	getRotation: -> {x: @rotation.x/(180/Math.PI), y: @rotation.y/(180/Math.PI), z: @rotation.z/(180/Math.PI)}

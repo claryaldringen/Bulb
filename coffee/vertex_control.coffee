@@ -3,6 +3,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 
 	constructor: (@camera, @domElement) ->
 		@mouse = new THREE.Vector2()
+		@take = no
 		super(@camera, @domElement)
 
 	init: ->
@@ -70,9 +71,12 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 	update: ->
 		if @object? and @vertex?
 			position = @vertex.clone()
+			@object.updateMatrixWorld()
 			position.applyMatrix4(@object.matrixWorld)
+			@camera.updateMatrixWorld()
 			@worldPosition.setFromMatrixPosition(@object.matrixWorld)
-			scale = @worldPosition.distanceTo(@camera.position) / 6 * 0.5
+			@camPosition.setFromMatrixPosition(@camera.matrixWorld )
+			scale = @worldPosition.distanceTo(@camPosition) / 6 * 0.8
 			@position.set(position.x, position.y, position.z)
 			@scale.set(scale, scale, scale)
 			if @space is 'local' then @rotation.copy(@object.rotation) else @rotation.set(0,0,0)
@@ -89,6 +93,13 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		else
 			axises = ['x','y','z']
 			sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
+		for index in @object.selecteds
+			vector = @object.geometry.vertices[index]
+			position = vector.clone()
+			position = @object.localToWorld(position) if @space is 'world'
+			position.add(sub)
+			position = @object.worldToLocal(position) if @space is 'world'
+			vector.set(position.x, position.y, position.z)
 		position = @vertex.clone()
 		position = @object.localToWorld(position) if @space is 'world'
 		position.add(sub)
@@ -108,7 +119,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 			@point = intersects[0].point.clone()
 			for arrow,index in @arrows when arrow is intersects[0].object.parent
 				@arrowIndex = index
-				@dispatchEvent({type: 'take'})
+				@take = yes
 				break
 			if @arrowIndex is 3
 				intersects = raycaster.intersectObjects(@planes, yes)
@@ -128,6 +139,9 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 				if point?
 					@move(point)
 					@dispatchEvent({type: 'change'})
+					if @take
+						@dispatchEvent({type: 'take'})
+						@take = no
 			else
 				@highlight(raycaster.intersectObjects(@arrows, yes)[0])
 
@@ -135,4 +149,5 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		@arrowIndex = null
 		@point = null
 		@dispatchEvent({type: 'let'})
+		@dispatchEvent({type: 'change'})
 

@@ -56,7 +56,7 @@ class CJS.Component
 			document.body.removeChild(document.getElementById(@id))
 		@
 
-	click: ->
+	click: (element, event) ->
 
 	focusIn: ->
 

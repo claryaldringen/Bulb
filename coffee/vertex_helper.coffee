@@ -5,6 +5,7 @@ class Bulb.VertexHelper extends THREE.Object3D
 		super()
 		@arrows = []
 		@worldPosition = new THREE.Vector3()
+		@camPosition =  new THREE.Vector3()
 		@space = 'world'
 		@init()
 
@@ -38,9 +39,10 @@ class Bulb.VertexHelper extends THREE.Object3D
 		@remove(@arrows[3]) if @arrows[3]?
 		origin = new THREE.Vector3(0,0,0)
 		normal = @getNormal()
-		@arrows[3] = new THREE.ArrowHelper(normal, origin, length, 0x800080, length/3, length/10)
-		@arrows[3].highlighted = no
-		@add(@arrows[3])
+		if normal?
+			@arrows[3] = new THREE.ArrowHelper(normal, origin, length, 0x800080, length/3, length/10)
+			@arrows[3].highlighted = no
+			@add(@arrows[3])
 		@
 
 	getMatrix: ->
@@ -63,7 +65,8 @@ class Bulb.VertexHelper extends THREE.Object3D
 			position = @vertex.clone()
 			position.applyMatrix4(@object.matrixWorld)
 			@worldPosition.setFromMatrixPosition(@object.matrixWorld)
-			scale = @worldPosition.distanceTo(@camera.position) / 6 * 0.5
+			@camPosition.setFromMatrixPosition(@camera.matrixWorld )
+			scale = @worldPosition.distanceTo(@camPosition) / 6 * 0.8
 			@position.set(position.x, position.y, position.z)
 			@scale.set(scale, scale, scale)
 			if @space is 'local' then @rotation.copy(@object.rotation) else @rotation.set(0,0,0)

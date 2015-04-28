@@ -9,17 +9,18 @@ class Bulb.ObjectList extends CJS.Component
 
 	setSelectedItemId: (@selectedItemId) -> @
 
-	click: (element) ->
+	click: (element, event) ->
 		if element.className is 'doRemove'
-			if element.dataset.id*1 is @selectedItemId
-				@selectedItemId = null
-				@getEvent('select').fire(@selectedItemId)
+			@selectedItemId = null if element.dataset.id*1 is @selectedItemId
 			@getEvent('remove').fire(element.dataset.id)
 			@render()
+			return
 		if element.hasClass('doSelect')
 			@selectedItemId = element.dataset.id*1
 			@getEvent('select').fire(@selectedItemId)
-			document.querySelector('#' + @id + ' .selected')?.classList.remove('selected')
+			elements = document.querySelectorAll('#' + @id + ' .selected')
+			for el in elements
+				el.classList.remove('selected')
 			element.classList.add('selected')
 		if element.hasClass('doChange')
 			element.parentElement.classList.add('selected')

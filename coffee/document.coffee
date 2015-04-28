@@ -65,12 +65,12 @@ class Bulb.Document extends CJS.Document
 			when 'vertices'
 				canvas = @getCanvas().setMode(Bulb.MODE_VERTICES)
 				if not child?
-					child = new Bulb.VertexList(id, tabMenu) if not child?
+					child = new Bulb.VertexList(id, tabMenu)
 					child.getEvent('change').subscribe(canvas, canvas.changeGeometry)
 				child.setVertices([object.selectedVector]).setHighlighted().setSelected() if object.selectedVector?
 			when 'userData'
 				if not child?
-					child = new Bulb.UserData(id, tabMenu) if not child?
+					child = new Bulb.UserData(id, tabMenu)
 				child.setObject(object)
 
 	getProperties: ->
@@ -115,7 +115,7 @@ class Bulb.Document extends CJS.Document
 		rotation = meshPropertyList.getRotation()
 		scale = meshPropertyList.getScale()
 		canvas = @getCanvas()
-		object = canvas.getScene().getObjectById(@getObjectList().getSelectedItemId())
+		object = canvas.getSelectedObject()
 		object.position.set(position.x, position.y, position.z)
 		object.rotation.set(rotation.x, rotation.y, rotation.z)
 		object.scale.set(scale.x, scale.y, scale.z)
@@ -133,50 +133,38 @@ class Bulb.Document extends CJS.Document
 	renameObject: (params) ->
 		@getCanvas().renameObject(params.id, params.value)
 
-	getExporter: ->
-		@exporter = new THREE.OBJExporter() if not @exporter?
-		@exporter
 
 	getSaveDialog: ->
 		child = @getChildById('saveDialog')
 		if not child?
 			child = new Bulb.SaveDialog('saveDialog', @)
-			child.addSaveType('Selected object', 'obj').addSaveType('All objects on scene', 'obj').addSaveType('Terrain settings', 'settings')
+			child.addSaveType('Selected object', 'obj')
+				.addSaveType('All objects on scene', 'obj')
+				.addSaveType('Terrain settings', 'settings')
+				.addSaveType('Scene and terrain settings', 'zip')
 			child.getEvent('save').subscribe(@, @export)
 		child
+
+	getExporter: ->
+		@exporter = new Bulb.Exporter() if not @exporter?
+		@exporter
 
 	export: (saveTypeId, filename)->
 		switch saveTypeId
 			when 0
 				filename += '.obj'
-				output = @getCanvas().getSelectedObject()
-				output = @getExporter().parse(output)
+				output = @getExporter().getObjectObj(@getCanvas())
+				@download(output, filename)
 			when 1
 				filename += '.obj'
-				objects = @getCanvas().getObjectCollection().getAsArray('objects')
-				output = new THREE.Scene()
-				output.add(object) for object in objects
-				output = @getExporter().parse(output)
+				output = @getExporter().getSceneObj(@getCanvas())
+				@download(output, filename)
 			when 2
 				filename += '.settings'
-				objects = @getCanvas().getObjectCollection().getAsArray('objects')
-				output1 = "# models (filename reverseWinding scaleFactor translation)\n"
-				output2 = "# fluid and wind source (rate position size)\n"
-				output3 = "# material (sediment_change max_sediment_in_particle critical_shear)\n"
-				for object,i in objects
-					type = object.userData.type
-					if type is 'm'
-						output1 += type + ' ' + object.name + i + '.obj 0 '
-						output1 += object.scale.x + '/' + object.scale.y + '/' + object.scale.z + ' '
-						output1 += object.position.x + '/' + object.position.y + '/' + object.position.z + "\n"
-
-						output3 += 's'
-						output3 += ' ' + val for prop, val of object.userData.sediment
-						output3 += "\n"
-					else
-						output2 += type + ' ' + object.userData.rate + ' ' + object.position.x + '/' + object.position.y + '/' + object.position.z + "\n"
-				output = "# Scene settings\n----------------\n" + output1 + "\n" + output2 + "\n" + output3
-		@download(output, filename)
+				output = @getExporter().getSettings(@getCanvas())
+				@download(output, filename)
+			when 3
+				@getExporter().getAll(filename, @getCanvas(), @download)
 
 	download: (output, filename) ->
 		blob = new Blob( [output], {type: 'text/plain' })
