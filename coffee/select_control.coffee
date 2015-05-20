@@ -41,6 +41,12 @@ class Bulb.SelectControl
 		@getVertexHelper().setSpace(space)
 		@
 
+	setAxis: (axis) ->
+		@getVertexControl().setAxis(axis)
+		@
+
+	getAxis: -> @getVertexControl().getAxis()
+
 	getVertexHelper: ->
 		if not @vertexHelper?
 			vertexHelper = new Bulb.VertexHelper(@camera, @domElement)
@@ -54,6 +60,8 @@ class Bulb.SelectControl
 			vertexControl.addEventListener 'take', =>
 				@unhighlightVector(no)
 				@active = no
+			vertexControl.addEventListener 'let', =>
+				@getEvent('saveStatus').fire()
 			@vertexControl = vertexControl
 		@vertexControl
 
@@ -118,6 +126,12 @@ class Bulb.SelectControl
 		return yes for id in @selectedObject.selecteds when id is index
 		no
 
+	moveSelected: (step, axis) ->
+		sub = new THREE.Vector3(0,0,0)
+		sub[ax] = step for ax in ['x','y','z'] when ax is axis
+		@getVertexControl().move(sub)
+		@
+
 	showVector: (intersect) ->
 		mouse = intersect.point
 		face = intersect.face
@@ -133,7 +147,7 @@ class Bulb.SelectControl
 		@
 
 	update: ->
-		if @vertexControl?
+		if @vertexControl? and @vertexControl.vertex?
 			@vertexControl.vertex.copy(@getGizmoPosition())
 			@vertexControl.update()
 
@@ -142,8 +156,10 @@ class Bulb.SelectControl
 			@intersect = @getIntersect(event, [@selectedObject])
 			if @intersect?
 				@showVector(@intersect)
+				@getEvent('mouseEnter').fire()
 			else
 				@unhighlightVector()
+				@getEvent('mouseLeave').fire()
 
 	onPointerClick: (event) ->
 		@selectVector(event.ctrlKey) if @selectedObject?

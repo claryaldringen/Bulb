@@ -4,6 +4,10 @@ class Bulb.Document extends CJS.Document
 	constructor: (id, parent) ->
 		super(id, parent)
 
+	clear: ->
+		window.indexedDB.deleteDatabase('Bulb')
+		window.document.location.reload(yes)
+
 	getCanvas: ->
 		canvas = @getChildById('canvas')
 		if not canvas?
@@ -21,8 +25,11 @@ class Bulb.Document extends CJS.Document
 			canvas = @getCanvas()
 			toolbar = new Bulb.Toolbar('toolbar', @)
 			toolbar.getEvent('doSave').subscribe(@, => @getSaveDialog().open('Save...'))
-			toolbar.getEvent('doSaveAll').subscribe(@, @exportScene)
+			toolbar.getEvent('doNew').subscribe(@, @clear)
 			toolbar.getEvent('doLoad').subscribe(@, @load)
+			toolbar.getEvent('doUndo').subscribe(@, @undo)
+			toolbar.getEvent('doRedo').subscribe(@, @redo)
+			toolbar.getEvent('doSettings').subscribe(@, => @getSettingsDialog().open('Settings'))
 			toolbar.getEvent('addVector').subscribe(canvas, canvas.addVector)
 			toolbar.getEvent('addCircle').subscribe(canvas, canvas.addCircle)
 			toolbar.getEvent('addPlane').subscribe(canvas, canvas.addPlane)
@@ -140,9 +147,14 @@ class Bulb.Document extends CJS.Document
 			child = new Bulb.SaveDialog('saveDialog', @)
 			child.addSaveType('Selected object', 'obj')
 				.addSaveType('All objects on scene', 'obj')
-				.addSaveType('Terrain settings', 'settings')
 				.addSaveType('Scene and terrain settings', 'zip')
 			child.getEvent('save').subscribe(@, @export)
+		child
+
+	getSettingsDialog: ->
+		child = @getChildById('settingsDialog')
+		if not child?
+			child = new Bulb.SettingsDialog('saveDialog', @)
 		child
 
 	getExporter: ->
@@ -160,10 +172,6 @@ class Bulb.Document extends CJS.Document
 				output = @getExporter().getSceneObj(@getCanvas())
 				@download(output, filename)
 			when 2
-				filename += '.settings'
-				output = @getExporter().getSettings(@getCanvas())
-				@download(output, filename)
-			when 3
 				@getExporter().getAll(filename, @getCanvas(), @download)
 
 	download: (output, filename) ->
@@ -174,27 +182,134 @@ class Bulb.Document extends CJS.Document
 		link.target = '_blank'
 		link.click()
 
+	undo: ->
+		canvas = @getCanvas()
+		canvas.scene = null
+		@getObjectList().setItems([]).render()
+		canvas.getObjectCollection().clear('objects')
+		@getStorage().decrease().get(canvas, canvas.setJSON)
+		canvas.restoreView()
+
+	redo: ->
+		canvas = @getCanvas()
+		canvas.scene = null
+		@getObjectList().setItems([]).render()
+		canvas.getObjectCollection().clear('objects')
+		@getStorage().increase().get(canvas, canvas.setJSON)
+		canvas.restoreView()
+
 	load: ->
 		el = document.createElement('input')
 		el.type = 'file'
-		el.accept = '.obj'
+		el.accept = '.obj,.zip'
 		el.addEventListener 'change', (event) =>
 			file = event.target.files[0]
-			reader = new FileReader()
-			reader.onload = (frEvent) =>
-				data = frEvent.target.result
-				loader = new THREE.OBJLoader()
-				@getCanvas().addLoadedObject(loader.parse(data))
-			reader.readAsText(file)
+			if file.type is 'application/zip'
+				zipper = new Bulb.Zipper()
+				zipper.getEvent('read').subscribe(@, @parseFile)
+				zipper.readFiles(file)
+			else
+				reader = new FileReader()
+				reader.onload = (frEvent) =>
+					data = frEvent.target.result
+					@addObjectToCanvas(data)
+				reader.readAsText(file)
 		el.click()
+
+	parseFile: (text, ext) ->
+		if ext is 'obj'
+			@addObjectToCanvas(text)
+		else
+			json = localStorage.getItem('scripts')
+			if json?
+				scripts = JSON.parse(json)
+				for script in scripts when script.type is 'import'
+					callback = 'var func = ' + callback
+					eval(callback)
+					func(text, @getCanvas().getScene())
+		@
+
+	addObjectToCanvas: (data) ->
+		loader = new THREE.OBJLoader()
+		@getCanvas().addLoadedObject(loader.parse(data))
+		@
+
+	getStorage: ->
+		@storage = new Bulb.Storage() if not @storage?
+		@storage
+
+	handleAddingObject: (items) -> @getObjectList().restore(items)
+
+	saveStatus: -> @getStorage().set(@getCanvas().getJSON())
 
 	bindEvents: ->
 		super()
 		canvas = @getCanvas()
-		objectList = @getObjectList()
-		canvas.getEvent('objectAdded').subscribe(objectList, objectList.restore)
-		objectList.getEvent('remove').subscribe(canvas, canvas.remove)
+		canvas.getEvent('objectAdded').subscribe(@, @handleAddingObject)
+		canvas.getEvent('saveStatus').subscribe(@, @saveStatus)
+		@getObjectList().getEvent('remove').subscribe(canvas, canvas.remove)
+		window.addEventListener 'load', =>
+			canvas = @getCanvas()
+			@getStorage().get(canvas, canvas.setJSON)
 		window.addEventListener 'resize', => @getCanvas().resize()
+		window.addEventListener 'keypress', (event) =>
+			console.log event.keyCode
+			#console.log event.shiftKey
+			canvas = @getCanvas()
+			if event.keyCode is 127
+				canvas.remove(canvas.getSelectedObject().id)
+			if event.keyCode is 26
+				if event.shiftKey then @redo() else @undo()
+			if event.keyCode is 120
+				if canvas.getMode() is Bulb.MODE_VERTICES
+					canvas.setControlAxis('x')
+				else
+					event.preventDefault()
+					tabMenu = @getProperties()
+					tab = tabMenu.getSelectedTab()
+					id = tabMenu.getChildId(tab.id)
+					child = tabMenu.getChildById(id)
+					child.focusElement('x', canvas.getTransformMode())
+			if event.keyCode is 121
+				if canvas.getMode() is Bulb.MODE_VERTICES
+					canvas.setControlAxis('y')
+				else
+					event.preventDefault()
+					tabMenu = @getProperties()
+					tab = tabMenu.getSelectedTab()
+					id = tabMenu.getChildId(tab.id)
+					child = tabMenu.getChildById(id)
+					child.focusElement('y', canvas.getTransformMode())
+			if event.keyCode is 122
+				if canvas.getMode() is Bulb.MODE_VERTICES
+					canvas.setControlAxis('z')
+				else
+					event.preventDefault()
+					tabMenu = @getProperties()
+					tab = tabMenu.getSelectedTab()
+					id = tabMenu.getChildId(tab.id)
+					child = tabMenu.getChildById(id)
+					child.focusElement('z', canvas.getTransformMode())
+			if event.keyCode is 109
+				event.preventDefault()
+				canvas = @getCanvas()
+				mode = canvas.getMode()
+				if mode is Bulb.MODE_MESH
+					@getProperties().selectTab(2)
+					canvas.setMode(Bulb.MODE_VERTICES)
+				if mode is Bulb.MODE_VERTICES
+					@getProperties().selectTab(0)
+					canvas.setMode(Bulb.MODE_MESH)
+		window.addEventListener 'keydown', (event) =>
+			axis = @getCanvas().getControlAxis()
+			if axis?
+				step = 0.01
+				step = 0.1 if event.shiftKey
+				if event.keyCode in [37,40]
+					@getCanvas().moveSelected(-step, axis)
+				if event.keyCode in [38,39]
+					@getCanvas().moveSelected(step, axis)
+		window.addEventListener 'keyup', (event) =>
 
 	getHtml: ->
 		toolbar = @getToolbar()

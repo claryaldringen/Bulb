@@ -34,6 +34,6 @@ class Bulb.ObjectList extends CJS.Component
 			html += '<input data-id="' + item.id + '" class="doChange" type="text" value="' + item.name + '">'
 			html += '<div class="actions">'
 			html += '<img src="images/eye.png" data-id="' + item.id + '" class="doHide" title="Hide">&nbsp;'
-			html += '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove">'
+			html += '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove (Delete)">'
 			html += '</div></li>'
 		html += '</ul></div>'

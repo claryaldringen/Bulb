@@ -2,8 +2,16 @@
 class Bulb.ObjectCollection
 
 	constructor: ->
-		@objects = {}
-		@asArray = {}
+		@clear()
+
+	clear: (key = null) ->
+		if key?
+			delete(@objects[key])
+			delete(@asArray[key])
+		else
+			@objects = {}
+			@asArray = {}
+		@
 
 	set: (key, object) ->
 		@objects[key] = object

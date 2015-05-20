@@ -3,9 +3,15 @@
 <head>
 	<title>Bulb</title>
 	<link rel="stylesheet" type="text/css" href="stylus/style.css">
+	<link rel="stylesheet" type="text/css" href="bower_components/codemirror/lib/codemirror.css">
+	<link rel="stylesheet" type="text/css" href="bower_components/codemirror/addon/hint/show-hint.css">
 
 	<script type="text/javascript" src="bower_components/threejs/build/three.js"></script>
 	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+	<script type="text/javascript" src="bower_components/codemirror/lib/codemirror.js"></script>
+	<script type="text/javascript" src="bower_components/codemirror/mode/javascript/javascript.js"></script>
+	<script type="text/javascript" src="bower_components/codemirror/addon/hint/show-hint.js"></script>
+	<script type="text/javascript" src="bower_components/codemirror/addon/hint/javascript-hint.js"></script>
 
 	<script type="text/javascript" src="js/trackball_controls.js"></script>
 	<script type="text/javascript" src="js/transform_controls.js"></script>
@@ -37,6 +43,11 @@
 	<script type="text/javascript" src="coffee/wireframe_helper.js"></script>
 	<script type="text/javascript" src="coffee/zipper.js"></script>
 	<script type="text/javascript" src="coffee/exporter.js"></script>
+	<script type="text/javascript" src="coffee/storage.js"></script>
+	<script type="text/javascript" src="coffee/settings_dialog.js"></script>
+	<script type="text/javascript" src="coffee/typedef_control.js"></script>
+	<script type="text/javascript" src="coffee/script_control.js"></script>
+	<script type="text/javascript" src="coffee/pack_control.js"></script>
 </head>
 <body>
 	<div id="document"></div>

@@ -3,22 +3,23 @@ class Bulb.SelectHelper extends THREE.Object3D
 
 	constructor: (@camera) ->
 		super()
+		@worldPosition = new THREE.Vector3()
+		@camPosition = new THREE.Vector3()
 
 	attach: (@object) ->
 		@remove(@children[i]) for i in [@children.length - 1..0] by -1
-		groups = @getGroups()
-		console.log groups
-		for face in groups.faces
+		@groups = @getGroups()
+		for face in @groups.faces
 			geometry = new THREE.Geometry()
 			geometry.vertices.push(object.geometry.vertices[face[0]], object.geometry.vertices[face[1]], object.geometry.vertices[face[2]], object.geometry.vertices[face[0]])
 			line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0xffff00}))
 			@add(line)
-		for edge in groups.edges
+		for edge in @groups.edges
 			geometry = new THREE.Geometry()
 			geometry.vertices.push(object.geometry.vertices[edge[0]], object.geometry.vertices[edge[1]])
 			line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0xffff00}))
 			@add(line)
-		@showSinglePoint(object.geometry.vertices[point]) for point in groups.points
+		@showSinglePoint(object.geometry.vertices[point]) for point in @groups.points
 		@
 
 	update: ->
@@ -32,10 +33,31 @@ class Bulb.SelectHelper extends THREE.Object3D
 		@position.copy(@object.position)
 		@scale.copy(@object.scale)
 		@rotation.copy(@object.rotation)
-#		for index,childIndex in @object.selecteds
-#			vector = @object.geometry.vertices[index]
+		if @object.selecteds?
+			for selectedIndex in @object.selecteds
+				@updateGeometry(selectedIndex, @groups.faces, 0).updateGeometry(selectedIndex, @groups.edges, @groups.faces.length)
+		@updatePoint(scale)
 #			@children[childIndex].position.copy(vector)
 #			@children[childIndex].scale.set(scale,scale,scale)
+
+	updateGeometry: (selectedIndex, groups, coefficient) ->
+		for group, childIndex in groups
+			for index,i in group when index is selectedIndex
+				vector = @object.geometry.vertices[index]
+				geometry = @children[childIndex+coefficient].geometry
+				geometry.vertices[i].copy(vector)
+				geometry.dynamic = yes
+				geometry.verticesNeedUpdate = yes
+				break
+		@
+
+	updatePoint: (scale) ->
+		start = @groups.faces.length + @groups.edges.length
+		for index,childIndex in @groups.points
+			vector = @object.geometry.vertices[index]
+			@children[childIndex+start].position.copy(vector)
+			@children[childIndex+start].scale.set(scale,scale,scale)
+		@
 
 	getGroups: ->
 		selecteds = @object.selecteds.slice()
@@ -63,13 +85,6 @@ class Bulb.SelectHelper extends THREE.Object3D
 					edges2.splice(i, 1)
 					break
 		{faces: edges3, edges: edges2, points: edges1}
-
-#			if x is 3
-#				geometry = new THREE.Geometry()
-#				geometry.vertices.push(@object.geometry.vertices[face.a], @object.geometry.vertices[face.b], @object.geometry.vertices[face.c], @object.geometry.vertices[face.a])
-#				line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0xffff00}))
-#				@add(line)
-
 
 	showSinglePoint: (vector) ->
 		cross = @getCross()

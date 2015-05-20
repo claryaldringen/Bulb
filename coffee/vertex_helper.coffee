@@ -19,12 +19,17 @@ class Bulb.VertexHelper extends THREE.Object3D
 
 	createArrows: ->
 		length = 0.8
+		i = 0
 		start = {'#FF0000': new THREE.Vector3(-length/3,0,0), '#00FF00': new THREE.Vector3(0,-length/3,0), '#0000FF': new THREE.Vector3(0,0,-length/3)}
-		for color,vector of {'#FF0000': new THREE.Vector3(1,0,0), '#00FF00': new THREE.Vector3(0,1,0), '#0000FF': new THREE.Vector3(0,0,1)}
-			arrow = new THREE.ArrowHelper(vector, start[color], length, color, length/3, length/8)
-			arrow.highlighted = no
-			@add(arrow)
+		vectors = {'#FF0000': new THREE.Vector3(1,0,0), '#00FF00': new THREE.Vector3(0,1,0), '#0000FF': new THREE.Vector3(0,0,1)}
+		for color,vector of vectors
+			arrow = new THREE.Object3D()
+			if not @axis? or ['x','y','z'][i] is @axis
+				arrow = new THREE.ArrowHelper(vector, start[color], length, color, length/4, length/10)
+				arrow.highlighted = no
+				@add(arrow)
 			@arrows.push(arrow)
+			i++
 		@
 
 	getNormal: ->

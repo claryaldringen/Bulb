@@ -9,6 +9,7 @@ class Bulb.Canvas extends CJS.Component
 		@selectedObject = null
 		@wireframeHelper = {}
 		@mode = Bulb.MODE_MESH
+		@transformMode = 'translate'
 
 	setMode: (mode) ->
 		if @mode isnt mode
@@ -27,13 +28,29 @@ class Bulb.Canvas extends CJS.Component
 			@mode = mode
 		@
 
+	getMode: -> @mode
+
+	setControlAxis: (axis) ->
+		if @mode is Bulb.MODE_VERTICES
+			@getSelectControl().setAxis(axis)
+			@restoreView()
+		@
+
+	getControlAxis: -> @getSelectControl().getAxis() if @mode is Bulb.MODE_VERTICES
+
+	moveSelected: (step, axis) ->
+		@getSelectControl().moveSelected(step, axis)
+		@
+
 	getObjectCollection: ->
 		@objectCollection = new Bulb.ObjectCollection() if not @objectCollection?
 		@objectCollection
 
-	setTransformMode: (mode) ->
-		@getTransformControls().setMode(mode)
+	setTransformMode: (@transformMode) ->
+		@getTransformControls().setMode(@transformMode)
 		@
+
+	getTransformMode: -> @transformMode
 
 	setTransformSpace: (space) ->
 		@getTransformControls().setSpace(space)
@@ -43,6 +60,18 @@ class Bulb.Canvas extends CJS.Component
 	getWidth: -> window.innerWidth
 
 	getHeight: -> window.innerHeight - 3
+
+	getJSON: ->
+		scene = @scene.clone()
+		toDel = []
+		toDel.push(object) for object in scene.children when not (object instanceof THREE.Mesh) or object.material instanceof THREE.MeshBasicMaterial
+		scene.remove(object) for object in toDel
+		json = scene.toJSON()
+		selected = null
+		for child,index in @scene.children when  child.id is @selectedObject.id
+			selected = index
+			break
+		{camera: @getCamera().toJSON(), scene: json, selected: selected, mode: @mode}
 
 	getRenderer: ->
 		@renderer = new THREE.WebGLRenderer() if not @renderer?
@@ -87,7 +116,13 @@ class Bulb.Canvas extends CJS.Component
 			@trackballControls.panSpeed = 1.0
 			@trackballControls.zoomSpeed = 1.0
 			@trackballControls.staticMoving = yes
-			@trackballControls.addEventListener 'change', => @restoreView()
+			@trackballControls.addEventListener 'change', =>
+				@trackballChanged = yes
+				@restoreView()
+			@trackballControls.addEventListener 'end', =>
+				if @trackballChanged
+					#@getEvent('saveStatus').fire()
+					@trackballChanged = no
 		@trackballControls
 
 	getTransformControls: ->
@@ -102,7 +137,9 @@ class Bulb.Canvas extends CJS.Component
 					@wireframeHelper['select'].update() if @wireframeHelper['select']?
 					@wireframeHelper['over'].update() if @wireframeHelper['over']?
 				@restoreView()
-			@transformControls.addEventListener 'mouseUp', => @transformed = yes
+			@transformControls.addEventListener 'mouseUp', =>
+				@transformed = yes
+				@getEvent('saveStatus').fire()
 		@transformControls
 
 	getSelectControl: ->
@@ -115,6 +152,9 @@ class Bulb.Canvas extends CJS.Component
 			@selectControl.getEvent('selectVector').subscribe @, =>
 				@getSelectHelper().attach(@selectedObject)
 				@getEvent('vertexSelect').fire()
+			@selectControl.getEvent('saveStatus').subscribe @, => @getEvent('saveStatus').fire()
+			@selectControl.getEvent('mouseEnter').subscribe @, => @getTrackballControls().enabled = no
+			@selectControl.getEvent('mouseLeave').subscribe @, => @getTrackballControls().enabled = yes
 		@selectControl
 
 	getSelectedObject: -> @selectedObject
@@ -127,7 +167,7 @@ class Bulb.Canvas extends CJS.Component
 		@getScene().add(light)
 		@restoreView()
 
-	getMaterial: -> new THREE.MeshLambertMaterial({color: 0x999999, vertexColors: THREE.FaceColors, transparent: yes, opacity: 0.9})
+	getMaterial: -> new THREE.MeshLambertMaterial({color: 0x999999, transparent: yes, opacity: 0.9})
 
 	addLoadedObject: (object) ->
 		for child in object.children
@@ -149,7 +189,37 @@ class Bulb.Canvas extends CJS.Component
 		@getScene().add(object)
 		@getObjectCollection().add('objects', object)
 		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
+		@getEvent('saveStatus').fire()
 		@restoreView()
+
+	setJSON: (json) ->
+		if json?
+			loader = new THREE.ObjectLoader()
+			loadedCamera = loader.parse(json.camera)
+			camera = @getCamera()
+			camera.position.copy(loadedCamera.position)
+			camera.rotation.copy(loadedCamera.rotation)
+			camera.aspect = loadedCamera.aspect
+			camera.near = loadedCamera.near
+			camera.far = loadedCamera.far
+
+			scene = loader.parse(json.scene)
+			@getScene()
+			while (scene.children.length > 0)
+				object = scene.children[0]
+				@scene.add(object)
+				@getObjectCollection().add('objects', object)
+			objects = @getObjectCollection().getAsArray('objects')
+			@getEvent('objectAdded').fire(objects)
+			if json.selected?
+				@mode = null
+				@selectHelper = null
+				@selectControl = null
+				@selectObject(@scene.children[json.selected].id)
+				@setMode(json.mode)
+			else
+				@restoreView()
+		@
 
 	addCircle: -> @addObject(new THREE.CircleGeometry(1,8, 0, 2 * Math.PI), 'Circle')
 
@@ -203,6 +273,7 @@ class Bulb.Canvas extends CJS.Component
 		scene.remove(object)
 		@getObjectCollection().remove('objects', object)
 		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
+		@getEvent('saveStatus').fire()
 		@restoreView()
 
 	renameObject: (id, name) ->

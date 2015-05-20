@@ -9,6 +9,12 @@ class CJS.TabMenu extends CJS.Component
 
 	getSelectedTab: -> return tab for tab in @tabs when tab.selected
 
+	selectTab: (index) ->
+		tab.selected = no for tab in @tabs
+		@tabs[index].selected = yes
+		@getEvent('change').fire(@)
+		@render()
+
 	addTab: (id, label, selected = no)->
 		@tabs.push({id: id, label: label, selected: selected})
 		@

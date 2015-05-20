@@ -46,7 +46,7 @@ class CJS.Component
 		el.classList.add('window')
 		document.body.appendChild(el)
 		@render()
-		el.style.top = (y - el.clientHeight) + 'px'
+		el.style.top = (y/3) + 'px'
 		el.style.left = (x - el.clientWidth/2) + 'px'
 		@
 

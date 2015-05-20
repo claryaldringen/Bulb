@@ -14,14 +14,26 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 	createPlanes: ->
 		planeGeometry = new THREE.PlaneGeometry( 50, 50, 2, 2 )
 		material = new THREE.MeshBasicMaterial( { wireframe: true } )
-		for index in [1..3]
-			plane = new THREE.Mesh(planeGeometry, material)
-			plane.visible = no
+		for index in [0,1,2]
+			plane = new THREE.Object3D()
+			if not @axis? or ['x','y','z'][index] is @axis
+				plane = new THREE.Mesh(planeGeometry, material)
+				plane.visible = no
+				@add(plane)
 			@planes.push(plane)
-			@add(plane)
 		@planes[1].rotation.set( 0, Math.PI/2, 0 )
 		@planes[2].rotation.set( - Math.PI/2, 0, 0 )
 		@
+
+	setAxis: (@axis) ->
+		for index in [0,1,2]
+			@remove(@planes[index]) if @planes[index]?
+			@remove(@arrows[index]) if @arrows[index]?
+		@arrows = []
+		@planes = []
+		@createArrows().createPlanes().update()
+
+	getAxis: -> @axis
 
 	getRaycaster: ->
 		@raycaster = new THREE.Raycaster() if not @raycaster?
@@ -82,7 +94,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 			if @space is 'local' then @rotation.copy(@object.rotation) else @rotation.set(0,0,0)
 		@
 
-	move: (point) ->
+	moveToPoint: (point) ->
 		sub = point.clone()
 		sub.sub(@point)
 		if @arrowIndex is 3
@@ -93,20 +105,25 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		else
 			axises = ['x','y','z']
 			sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
+		@point = point.clone()
+		@move(sub)
+
+	move: (step) ->
 		for index in @object.selecteds
 			vector = @object.geometry.vertices[index]
 			position = vector.clone()
 			position = @object.localToWorld(position) if @space is 'world'
-			position.add(sub)
+			position.add(step)
 			position = @object.worldToLocal(position) if @space is 'world'
 			vector.set(position.x, position.y, position.z)
 		position = @vertex.clone()
 		position = @object.localToWorld(position) if @space is 'world'
-		position.add(sub)
+		position.add(step)
 		position = @object.worldToLocal(position) if @space is 'world'
 		@vertex.set(position.x, position.y, position.z)
-		@point = point.clone()
 		@update()
+		@dispatchEvent({type: 'change'})
+		@
 
 	onPointerDown: (event) ->
 		event.preventDefault()
@@ -137,8 +154,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 				if @arrowIndex < 3 then objects = [@planes[@arrowIndex]] else objects = [@plane]
 				point = raycaster.intersectObjects(objects, yes)[0]?.point
 				if point?
-					@move(point)
-					@dispatchEvent({type: 'change'})
+					@moveToPoint(point)
 					if @take
 						@dispatchEvent({type: 'take'})
 						@take = no
@@ -148,6 +164,9 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 	onPointerUp: (event) ->
 		@arrowIndex = null
 		@point = null
+		if @object? and @object.geometry.parameters?
+			delete(@object.geometry.parameters)
+			@object.geometry.type = 'Geometry'
 		@dispatchEvent({type: 'let'})
 		@dispatchEvent({type: 'change'})
 
