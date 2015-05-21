@@ -306,9 +306,14 @@ class Bulb.Canvas extends CJS.Component
 
 	selectObject: (objectId, fireEvent = yes) ->
 		scene = @getScene()
-		control = @getTransformControls()
+		if @transformControls?
+			control = @getTransformControls()
+			control.detach(control.getAttached())
+			scene.remove(control)
+			@transformControls = null
 		@removeWireframeHelper('select')
 		if objectId?
+			control = @getTransformControls()
 			@selectedObject = scene.getObjectById(objectId)
 			control.attach(@selectedObject)
 			scene.add(control)
@@ -318,8 +323,6 @@ class Bulb.Canvas extends CJS.Component
 		else if @transformed
 			@transformed = no
 		else
-			control.detach(control.getAttached())
-			scene.remove(control)
 			@selectedObject = scene
 			@getEvent('select').fire(null) if fireEvent
 		@restoreView()
