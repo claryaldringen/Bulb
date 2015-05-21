@@ -300,6 +300,22 @@ class Bulb.Document extends CJS.Document
 				if mode is Bulb.MODE_VERTICES
 					@getProperties().selectTab(0)
 					canvas.setMode(Bulb.MODE_MESH)
+			if event.keyCode is 116
+				@getToolbar().checkTransform('translate')
+				canvas.setTransformMode('translate')
+			if event.keyCode is 114
+				@getToolbar().checkTransform('rotate')
+				canvas.setTransformMode('rotate')
+			if event.keyCode is 115
+				@getToolbar().checkTransform('scale')
+				canvas.setTransformMode('scale')
+			if event.keyCode is 119
+				@getToolbar().checkSpace('world')
+				canvas.setTransformSpace('world')
+			if event.keyCode is 108
+				@getToolbar().checkSpace('local')
+				canvas.setTransformSpace('local')
+
 		window.addEventListener 'keydown', (event) =>
 			axis = @getCanvas().getControlAxis()
 			if axis?

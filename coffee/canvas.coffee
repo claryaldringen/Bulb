@@ -293,12 +293,13 @@ class Bulb.Canvas extends CJS.Component
 		@
 
 	changeGeometry: ->
-		@selectedObject.geometry.dynamic = yes
-		@selectedObject.geometry.verticesNeedUpdate = yes
-		@selectedObject.geometry.normalsNeedUpdate = yes
-		@selectedObject.geometry.computeFaceNormals()
-		@selectedObject.geometry.computeBoundingSphere()
-		@wireframeHelper['select'].update()
+		if @selectedObject?
+			@selectedObject.geometry.dynamic = yes
+			@selectedObject.geometry.verticesNeedUpdate = yes
+			@selectedObject.geometry.normalsNeedUpdate = yes
+			@selectedObject.geometry.computeFaceNormals()
+			@selectedObject.geometry.computeBoundingSphere()
+			@wireframeHelper['select'].update()
 		@wireframeHelper['over'].update() if @wireframeHelper['over']?
 		@restoreView()
 		@

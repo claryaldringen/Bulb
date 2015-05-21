@@ -18,6 +18,18 @@ class Bulb.Toolbar extends CJS.Component
 		@getEvent('changeTransformMode').fire(element.value) if element.hasClass('doChangeMode')
 		@getEvent('changeTransformSpace').fire(element.value) if element.hasClass('doChangeSpace')
 
+	checkTransform: (transform) ->
+		for element in document.querySelectorAll('#' + @id + ' .doChangeMode')
+			element.checked = no
+			element.checked = yes if element.value is transform
+		@
+
+	checkSpace: (space) ->
+		for element in document.querySelectorAll('#' + @id + ' .doChangeSpace')
+			element.checked = no
+			element.checked = yes if element.value is space
+		@
+
 	getHtml: ->
 		html = '<div class="title">Toolbar</div>'
 		html += '<div class="button doNew" title="New"><img src="./images/page_white.png" width="16" height="16"></div>'
