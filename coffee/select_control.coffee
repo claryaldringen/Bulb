@@ -5,9 +5,9 @@ class Bulb.SelectControl
 		@active = yes
 		@down = no
 		@events = []
-		domElement.addEventListener 'mousemove', (event) => @onPointerMove(event)
-		domElement.addEventListener 'mousedown', (event) => @onPointerDown(event)
-		domElement.addEventListener 'click', (event) => @onPointerClick(event)
+		@domElement.addEventListener 'mousemove', (event) => @onPointerMove(event)
+		@domElement.addEventListener 'mousedown', (event) => @onPointerDown(event)
+		@domElement.addEventListener 'click', (event) => @onPointerClick(event)
 
 	getWidth: -> window.innerWidth
 
@@ -95,14 +95,67 @@ class Bulb.SelectControl
 		if @active
 			actualVectorIndex = @getVertexIndex(@actualVector)
 			@scene.remove(@getVertexControl())
-			if not @isSelected(actualVectorIndex) or not add
-				if add then @selectedObject.selecteds.push(actualVectorIndex) else @selectedObject.selecteds = [actualVectorIndex]
+			if not @isSelected(actualVectorIndex) or add is 0
+				if add is 1
+					@selectedObject.selecteds.push(actualVectorIndex)
+				else if add is 2 and @selectedObject.selecteds.length
+					@findShortestPath(@selectedObject.selecteds[@selectedObject.selecteds.length-1], actualVectorIndex)
+				else
+					@selectedObject.selecteds = [actualVectorIndex]
 			else
 				index = @selectedObject.selecteds.indexOf(actualVectorIndex)
 				@selectedObject.selecteds.splice(index,1)
 			@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
 			@getEvent('selectVector').fire()
 			@getEvent('change').fire()
+
+	findShortestPath: (start, end)->
+		all = @getNeighbors()
+		d = []
+		p = []
+		nonVisited = [0...@selectedObject.geometry.vertices.length]
+		for i in nonVisited
+			if i is start then d[i] = 0 else d[i] = Infinity
+			p[i] = undefined
+
+		while nonVisited.length
+			vertex = @getMin(d, nonVisited)
+			break if vertex is end
+			nonVisited.splice(nonVisited.indexOf(vertex),1)
+			for neighbor in all[vertex]
+				alt = d[vertex]+1;
+				if alt < d[neighbor]
+					d[neighbor] = alt
+					p[neighbor] = vertex
+		S = []
+		u = end
+		while p[u]?
+			S.unshift(u)
+			u = p[u]
+		@selectedObject.selecteds.push(vertexIndex) for vertexIndex in S
+		console.log @selectedObject.selecteds
+		@
+
+	getMin: (lengths, nonVisited) ->
+		min = Infinity
+		for vertexIndex in nonVisited when lengths[vertexIndex]?
+			len = lengths[vertexIndex]
+			if len < min
+				min = len
+				vertex = vertexIndex
+		vertex
+
+	getNeighbors: ->
+		vertices = []
+		vertices[index] = [] for vertex, index in @selectedObject.geometry.vertices
+		for face in @selectedObject.geometry.faces
+			vertices[face['a']].push(face['b']) if face['b'] not in vertices[face['a']]
+			vertices[face['a']].push(face['c']) if face['c'] not in vertices[face['a']]
+			vertices[face['b']].push(face['a']) if face['a'] not in vertices[face['b']]
+			vertices[face['b']].push(face['c']) if face['c'] not in vertices[face['b']]
+			vertices[face['c']].push(face['a']) if face['a'] not in vertices[face['c']]
+			vertices[face['c']].push(face['b']) if face['b'] not in vertices[face['c']]
+		vertices
 
 	getGizmoPosition: ->
 		center = new THREE.Vector3()
@@ -162,7 +215,11 @@ class Bulb.SelectControl
 				@getEvent('mouseLeave').fire()
 
 	onPointerClick: (event) ->
-		@selectVector(event.ctrlKey) if @selectedObject?
+		event.preventDefault()
+		add = 0
+		add = 1 if event.ctrlKey
+		add = 2 if event.shiftKey
+		@selectVector(add) if @selectedObject?
 		@active = yes
 		@down = no
 

@@ -253,7 +253,7 @@ class Bulb.Document extends CJS.Document
 			@getStorage().get(canvas, canvas.setJSON)
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>
-			console.log event.keyCode
+			#console.log event.keyCode
 			#console.log event.shiftKey
 			canvas = @getCanvas()
 			if event.keyCode is 127

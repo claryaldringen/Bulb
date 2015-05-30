@@ -2,7 +2,7 @@
 class Bulb.WireframeHelper extends THREE.Mesh
 
 	constructor: (@object) ->
-		super(object.geometry.clone(), new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: yes}))
+		super(@object.geometry.clone(), new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: yes}))
 		@update()
 
 	update: ->

@@ -81,7 +81,7 @@ class Bulb.ScriptControl extends CJS.Component
 				@scripts[@actual].label = label.value
 				@scripts[@actual].extension = ext.value
 				@scripts[@actual].type = ['export','import'][type.selectedIndex]
-				console.log type
+				#console.log type
 				@save().render()
 		if element.hasClass('doDelete') and confirm('Really delete?')
 			@scripts.splice(@actual, 1)

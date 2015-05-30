@@ -29,7 +29,7 @@ class Bulb.Storage
 			request.onsuccess = =>
 				@lastJson = json
 				@increase()
-				console.log @id
+				#console.log @id
 
 
 	load: (db, obj, callback) ->
@@ -42,7 +42,7 @@ class Bulb.Storage
 					@id = event.target.result.lastId
 					@load(db, obj, callback)
 			return
-		console.log @id
+		#console.log @id
 		request = objectStore.get(@id)
 		request.onsuccess = (event) -> callback.call(obj,event.target.result)
 

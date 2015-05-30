@@ -29,7 +29,7 @@ class Bulb.MeshPropertyList extends CJS.Component
 	getRotation: -> {x: @rotation.x/(180/Math.PI), y: @rotation.y/(180/Math.PI), z: @rotation.z/(180/Math.PI)}
 
 	setScale: (@scale) ->
-		document.getElementById(@getScaleId(axis))?.value = Math.round(value*100)/100 for axis,value of scale
+		document.getElementById(@getScaleId(axis))?.value = Math.round(value*100)/100 for axis,value of @scale
 		@
 
 	getScale: -> @scale

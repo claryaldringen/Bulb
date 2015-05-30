@@ -11,15 +11,15 @@ class Bulb.SelectHelper extends THREE.Object3D
 		@groups = @getGroups()
 		for face in @groups.faces
 			geometry = new THREE.Geometry()
-			geometry.vertices.push(object.geometry.vertices[face[0]], object.geometry.vertices[face[1]], object.geometry.vertices[face[2]], object.geometry.vertices[face[0]])
+			geometry.vertices.push(@object.geometry.vertices[face[0]], @object.geometry.vertices[face[1]], @object.geometry.vertices[face[2]], @object.geometry.vertices[face[0]])
 			line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0xffff00}))
 			@add(line)
 		for edge in @groups.edges
 			geometry = new THREE.Geometry()
-			geometry.vertices.push(object.geometry.vertices[edge[0]], object.geometry.vertices[edge[1]])
+			geometry.vertices.push(@object.geometry.vertices[edge[0]], @object.geometry.vertices[edge[1]])
 			line = new THREE.Line(geometry, new THREE.LineBasicMaterial({color: 0xffff00}))
 			@add(line)
-		@showSinglePoint(object.geometry.vertices[point]) for point in @groups.points
+		@showSinglePoint(@object.geometry.vertices[point]) for point in @groups.points
 		@
 
 	update: ->
