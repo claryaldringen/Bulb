@@ -99,7 +99,7 @@ class Bulb.SelectControl
 				if add is 1
 					@selectedObject.selecteds.push(actualVectorIndex)
 				else if add is 2 and @selectedObject.selecteds.length
-					@findShortestPath(@selectedObject.selecteds[@selectedObject.selecteds.length-1], actualVectorIndex)
+					@selectShortestPath(@selectedObject.selecteds[@selectedObject.selecteds.length-1], actualVectorIndex)
 				else
 					@selectedObject.selecteds = [actualVectorIndex]
 			else
@@ -109,31 +109,30 @@ class Bulb.SelectControl
 			@getEvent('selectVector').fire()
 			@getEvent('change').fire()
 
-	findShortestPath: (start, end)->
-		all = @getNeighbors()
-		d = []
-		p = []
+	selectShortestPath: (start, end)->
+		vertexNeighboursList = @getNeighbors()
+		lengths = []
+		path = []
 		nonVisited = [0...@selectedObject.geometry.vertices.length]
 		for i in nonVisited
-			if i is start then d[i] = 0 else d[i] = Infinity
-			p[i] = undefined
+			if i is start then lengths[i] = 0 else lengths[i] = Infinity
+			path[i] = undefined
 
 		while nonVisited.length
-			vertex = @getMin(d, nonVisited)
+			vertex = @getMin(lengths, nonVisited)
 			break if vertex is end
 			nonVisited.splice(nonVisited.indexOf(vertex),1)
-			for neighbor in all[vertex]
-				alt = d[vertex]+1;
-				if alt < d[neighbor]
-					d[neighbor] = alt
-					p[neighbor] = vertex
-		S = []
-		u = end
-		while p[u]?
-			S.unshift(u)
-			u = p[u]
-		@selectedObject.selecteds.push(vertexIndex) for vertexIndex in S
-		console.log @selectedObject.selecteds
+			for neighbor in vertexNeighboursList[vertex]
+				alt = lengths[vertex]+1;
+				if alt < lengths[neighbor]
+					lengths[neighbor] = alt
+					path[neighbor] = vertex
+		shortestWay = []
+		vertex = end
+		while path[vertex]?
+			shortestWay.unshift(vertex)
+			vertex = path[vertex]
+		@selectedObject.selecteds.push(vertexIndex) for vertexIndex in shortestWay
 		@
 
 	getMin: (lengths, nonVisited) ->
