@@ -30,6 +30,10 @@ class Bulb.Canvas extends CJS.Component
 
 	getMode: -> @mode
 
+	setFillSelect: ->
+		@getSelectControl().setFillSelect()
+		@
+
 	setControlAxis: (axis) ->
 		if @mode is Bulb.MODE_VERTICES
 			@getSelectControl().setAxis(axis)

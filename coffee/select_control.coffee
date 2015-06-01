@@ -5,9 +5,14 @@ class Bulb.SelectControl
 		@active = yes
 		@down = no
 		@events = []
+		@floodFill = no
 		@domElement.addEventListener 'mousemove', (event) => @onPointerMove(event)
 		@domElement.addEventListener 'mousedown', (event) => @onPointerDown(event)
 		@domElement.addEventListener 'click', (event) => @onPointerClick(event)
+
+	setFillSelect: ->
+		@floodFill = yes
+		@
 
 	getWidth: -> window.innerWidth
 
@@ -19,6 +24,7 @@ class Bulb.SelectControl
 
 	setSelectedObject: (@selectedObject) ->
 		@selectedObject.selecteds = []
+		@neighbours = null
 		@active = yes
 		@
 
@@ -95,16 +101,18 @@ class Bulb.SelectControl
 		if @active
 			actualVectorIndex = @getVertexIndex(@actualVector)
 			@scene.remove(@getVertexControl())
-			if not @isSelected(actualVectorIndex) or add is 0
-				if add is 1
-					@selectedObject.selecteds.push(actualVectorIndex)
-				else if add is 2 and @selectedObject.selecteds.length
+			switch add
+				when 0
+					if @selectedObject.selecteds[0] is actualVectorIndex then @selectedObject.selecteds = [] else @selectedObject.selecteds = [actualVectorIndex]
+					@neighbours = null
+				when 1
+					if @isSelected(actualVectorIndex) then @selectedObject.selecteds.splice(@selectedObject.selecteds.indexOf(actualVectorIndex),1) else @selectedObject.selecteds.push(actualVectorIndex)
+				when 2
 					@selectShortestPath(@selectedObject.selecteds[@selectedObject.selecteds.length-1], actualVectorIndex)
-				else
-					@selectedObject.selecteds = [actualVectorIndex]
-			else
-				index = @selectedObject.selecteds.indexOf(actualVectorIndex)
-				@selectedObject.selecteds.splice(index,1)
+				when 4
+					@floodFillSelect(actualVectorIndex)
+					@floodFill = no
+
 			@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
 			@getEvent('selectVector').fire()
 			@getEvent('change').fire()
@@ -133,6 +141,7 @@ class Bulb.SelectControl
 			shortestWay.unshift(vertex)
 			vertex = path[vertex]
 		@selectedObject.selecteds.push(vertexIndex) for vertexIndex in shortestWay
+		@selectedObject.selecteds = @selectedObject.selecteds.filter((value, index, self) -> self.indexOf(value) is index)
 		@
 
 	getMin: (lengths, nonVisited) ->
@@ -145,16 +154,27 @@ class Bulb.SelectControl
 		vertex
 
 	getNeighbors: ->
-		vertices = []
-		vertices[index] = [] for vertex, index in @selectedObject.geometry.vertices
-		for face in @selectedObject.geometry.faces
-			vertices[face['a']].push(face['b']) if face['b'] not in vertices[face['a']]
-			vertices[face['a']].push(face['c']) if face['c'] not in vertices[face['a']]
-			vertices[face['b']].push(face['a']) if face['a'] not in vertices[face['b']]
-			vertices[face['b']].push(face['c']) if face['c'] not in vertices[face['b']]
-			vertices[face['c']].push(face['a']) if face['a'] not in vertices[face['c']]
-			vertices[face['c']].push(face['b']) if face['b'] not in vertices[face['c']]
-		vertices
+		if not @neighbours?
+			vertices = []
+			vertices[index] = [] for vertex, index in @selectedObject.geometry.vertices
+			for face in @selectedObject.geometry.faces
+				vertices[face['a']].push(face['b']) if face['b'] not in vertices[face['a']]
+				vertices[face['a']].push(face['c']) if face['c'] not in vertices[face['a']]
+				vertices[face['b']].push(face['a']) if face['a'] not in vertices[face['b']]
+				vertices[face['b']].push(face['c']) if face['c'] not in vertices[face['b']]
+				vertices[face['c']].push(face['a']) if face['a'] not in vertices[face['c']]
+				vertices[face['c']].push(face['b']) if face['b'] not in vertices[face['c']]
+			@neighbours = vertices
+		@neighbours
+
+	floodFillSelect: (vertex) ->
+		@selectedObject.selecteds.push(vertex)
+		neighbours = @getNeighbors()
+		if neighbours[vertex]?
+			for neighbor in @neighbours[vertex] when neighbor not in @selectedObject.selecteds
+				@floodFillSelect(neighbor)
+			@neighbours[vertex] = null
+		@
 
 	getGizmoPosition: ->
 		center = new THREE.Vector3()
@@ -217,7 +237,8 @@ class Bulb.SelectControl
 		event.preventDefault()
 		add = 0
 		add = 1 if event.ctrlKey
-		add = 2 if event.shiftKey
+		add = 2 if event.shiftKey and @selectedObject.selecteds.length
+		add = 4 if @floodFill
 		@selectVector(add) if @selectedObject?
 		@active = yes
 		@down = no

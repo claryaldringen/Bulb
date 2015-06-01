@@ -315,6 +315,8 @@ class Bulb.Document extends CJS.Document
 			if event.keyCode is 108
 				@getToolbar().checkSpace('local')
 				canvas.setTransformSpace('local')
+			if event.keyCode is 102
+				canvas.setFillSelect()
 
 		window.addEventListener 'keydown', (event) =>
 			axis = @getCanvas().getControlAxis()
