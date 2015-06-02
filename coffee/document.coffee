@@ -3,10 +3,13 @@ class Bulb.Document extends CJS.Document
 
 	constructor: (id, parent) ->
 		super(id, parent)
+		@active = yes
 
 	clear: ->
 		window.indexedDB.deleteDatabase('Bulb')
 		window.document.location.reload(yes)
+
+	setActive: (@active) -> @
 
 	getCanvas: ->
 		canvas = @getChildById('canvas')
@@ -207,6 +210,7 @@ class Bulb.Document extends CJS.Document
 			if file.type is 'application/zip'
 				zipper = new Bulb.Zipper()
 				zipper.getEvent('read').subscribe(@, @parseFile)
+				zipper.getEvent('readEnd').subscribe(@, @finishLoad)
 				zipper.readFiles(file)
 			else
 				reader = new FileReader()
@@ -216,18 +220,22 @@ class Bulb.Document extends CJS.Document
 				reader.readAsText(file)
 		el.click()
 
-	parseFile: (text, ext) ->
+	parseFile: (text, name, ext) ->
 		if ext is 'obj'
 			@addObjectToCanvas(text)
 		else
 			json = localStorage.getItem('scripts')
 			if json?
 				scripts = JSON.parse(json)
-				for script in scripts when script.type is 'import'
-					callback = 'var func = ' + callback
+				for script in scripts when script.type is 'import' and script.extension is ext
+					@loadCallbackParam = text
+					callback = 'this.loadCallback = ' + script.code
 					eval(callback)
-					func(text, @getCanvas().getScene())
 		@
+
+	finishLoad: ->
+		@loadCallback(@loadCallbackParam, @getCanvas().getScene())
+		@getCanvas().restoreView()
 
 	addObjectToCanvas: (data) ->
 		loader = new THREE.OBJLoader()
@@ -255,68 +263,69 @@ class Bulb.Document extends CJS.Document
 		window.addEventListener 'keypress', (event) =>
 			#console.log event.keyCode
 			#console.log event.shiftKey
-			canvas = @getCanvas()
-			if event.keyCode is 127
-				canvas.remove(canvas.getSelectedObject().id)
-			if event.keyCode is 26
-				if event.shiftKey then @redo() else @undo()
-			if event.keyCode is 120
-				if canvas.getMode() is Bulb.MODE_VERTICES
-					canvas.setControlAxis('x')
-				else
-					event.preventDefault()
-					tabMenu = @getProperties()
-					tab = tabMenu.getSelectedTab()
-					id = tabMenu.getChildId(tab.id)
-					child = tabMenu.getChildById(id)
-					child.focusElement('x', canvas.getTransformMode())
-			if event.keyCode is 121
-				if canvas.getMode() is Bulb.MODE_VERTICES
-					canvas.setControlAxis('y')
-				else
-					event.preventDefault()
-					tabMenu = @getProperties()
-					tab = tabMenu.getSelectedTab()
-					id = tabMenu.getChildId(tab.id)
-					child = tabMenu.getChildById(id)
-					child.focusElement('y', canvas.getTransformMode())
-			if event.keyCode is 122
-				if canvas.getMode() is Bulb.MODE_VERTICES
-					canvas.setControlAxis('z')
-				else
-					event.preventDefault()
-					tabMenu = @getProperties()
-					tab = tabMenu.getSelectedTab()
-					id = tabMenu.getChildId(tab.id)
-					child = tabMenu.getChildById(id)
-					child.focusElement('z', canvas.getTransformMode())
-			if event.keyCode is 109
-				event.preventDefault()
+			if @active
 				canvas = @getCanvas()
-				mode = canvas.getMode()
-				if mode is Bulb.MODE_MESH
-					@getProperties().selectTab(2)
-					canvas.setMode(Bulb.MODE_VERTICES)
-				if mode is Bulb.MODE_VERTICES
-					@getProperties().selectTab(0)
-					canvas.setMode(Bulb.MODE_MESH)
-			if event.keyCode is 116
-				@getToolbar().checkTransform('translate')
-				canvas.setTransformMode('translate')
-			if event.keyCode is 114
-				@getToolbar().checkTransform('rotate')
-				canvas.setTransformMode('rotate')
-			if event.keyCode is 115
-				@getToolbar().checkTransform('scale')
-				canvas.setTransformMode('scale')
-			if event.keyCode is 119
-				@getToolbar().checkSpace('world')
-				canvas.setTransformSpace('world')
-			if event.keyCode is 108
-				@getToolbar().checkSpace('local')
-				canvas.setTransformSpace('local')
-			if event.keyCode is 102
-				canvas.setFillSelect()
+				if event.keyCode is 127
+					canvas.remove(canvas.getSelectedObject().id)
+				if event.keyCode is 26
+					if event.shiftKey then @redo() else @undo()
+				if event.keyCode is 120
+					if canvas.getMode() is Bulb.MODE_VERTICES
+						canvas.setControlAxis('x')
+					else
+						event.preventDefault()
+						tabMenu = @getProperties()
+						tab = tabMenu.getSelectedTab()
+						id = tabMenu.getChildId(tab.id)
+						child = tabMenu.getChildById(id)
+						child.focusElement('x', canvas.getTransformMode())
+				if event.keyCode is 121
+					if canvas.getMode() is Bulb.MODE_VERTICES
+						canvas.setControlAxis('y')
+					else
+						event.preventDefault()
+						tabMenu = @getProperties()
+						tab = tabMenu.getSelectedTab()
+						id = tabMenu.getChildId(tab.id)
+						child = tabMenu.getChildById(id)
+						child.focusElement('y', canvas.getTransformMode())
+				if event.keyCode is 122
+					if canvas.getMode() is Bulb.MODE_VERTICES
+						canvas.setControlAxis('z')
+					else
+						event.preventDefault()
+						tabMenu = @getProperties()
+						tab = tabMenu.getSelectedTab()
+						id = tabMenu.getChildId(tab.id)
+						child = tabMenu.getChildById(id)
+						child.focusElement('z', canvas.getTransformMode())
+				if event.keyCode is 109
+					event.preventDefault()
+					canvas = @getCanvas()
+					mode = canvas.getMode()
+					if mode is Bulb.MODE_MESH
+						@getProperties().selectTab(2)
+						canvas.setMode(Bulb.MODE_VERTICES)
+					if mode is Bulb.MODE_VERTICES
+						@getProperties().selectTab(0)
+						canvas.setMode(Bulb.MODE_MESH)
+				if event.keyCode is 116
+					@getToolbar().checkTransform('translate')
+					canvas.setTransformMode('translate')
+				if event.keyCode is 114
+					@getToolbar().checkTransform('rotate')
+					canvas.setTransformMode('rotate')
+				if event.keyCode is 115
+					@getToolbar().checkTransform('scale')
+					canvas.setTransformMode('scale')
+				if event.keyCode is 119
+					@getToolbar().checkSpace('world')
+					canvas.setTransformSpace('world')
+				if event.keyCode is 108
+					@getToolbar().checkSpace('local')
+					canvas.setTransformSpace('local')
+				if event.keyCode is 102
+					canvas.setFillSelect()
 
 		window.addEventListener 'keydown', (event) =>
 			axis = @getCanvas().getControlAxis()

@@ -56,7 +56,7 @@ class Bulb.Exporter
 		json = localStorage.getItem('scripts')
 		if json?
 			scripts = JSON.parse(json)
-			for script in scripts when script.code isnt ''
+			for script in scripts when script.type is 'export' and script.code isnt ''
 				files.push({name: filename + '.' + script.extension, content: new Blob([@getSettings(canvas, script.code)], {type: 'text/plain' })})
 		zipper = new Bulb.Zipper()
 		zipper.addFiles(files, (zipped) -> callback(zipped, filename + '.zip'))

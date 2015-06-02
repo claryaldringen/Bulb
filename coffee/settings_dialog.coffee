@@ -1,5 +1,5 @@
 
-class Bulb.SettingsDialog extends CJS.Component
+class Bulb.SettingsDialog extends Bulb.Dialog
 
 	constructor: (id, parent) ->
 		super(id, parent)
@@ -52,7 +52,7 @@ class Bulb.SettingsDialog extends CJS.Component
 	getHtml: ->
 		html = '<div class="settings_toolbar">'
 		html += '<div class="doChangeTool" data-tool="typedef"><img src="./images/tools.png" data-tool="typedef"><br>Typedef Settings</div><br>'
-		html += '<div class="doChangeTool" data-tool="saveScript"><img src="./images/disc.png" data-tool="saveScript"><br>Save Scripts</div><br>'
+		html += '<div class="doChangeTool" data-tool="saveScript"><img src="./images/disc.png" data-tool="saveScript"><br>Save/Load Scripts</div><br>'
 		html += '<div class="doChangeTool" data-tool="pack"><img src="./images/box.png" data-tool="pack"><br>ZIP Settings</div><br>'
 		html += '</div>'
 		switch @tool

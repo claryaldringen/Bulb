@@ -1,5 +1,5 @@
 
-class Bulb.SaveDialog extends CJS.Component
+class Bulb.SaveDialog extends Bulb.Dialog
 
 	constructor: (id, parent) ->
 		super(id, parent)

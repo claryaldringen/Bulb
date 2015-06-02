@@ -1,0 +1,1 @@
+Bulb.data.zip_rules = [{"name":"type","operator":"is","value":"model","next":"and"}];

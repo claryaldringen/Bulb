@@ -40,7 +40,7 @@ class CJS.Component
 		)
 		@
 
-	open: (@windowTitle = '', x = window.innerWidth/2, y = window.innerHeight/3)->
+	open: (@windowTitle = '', x = window.innerWidth/2, y = window.innerHeight/3) ->
 		el = document.createElement('div')
 		el.id = @id
 		el.classList.add('window')

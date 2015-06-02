@@ -36,13 +36,16 @@ class Bulb.Zipper
 			new zip.BlobReader(zipFile)
 			(zipReader) =>
 				zipReader.getEntries(
-					(entries) => @getEntryFile(entry) for entry in entries
+					(entries) =>
+						@getEntryFile(entry, i, entries.length-1) for entry,i in entries
 				)
 		)
 
-	getEntryFile: (entry) ->
+	getEntryFile: (entry, index, max) ->
 		name = entry.filename.split('.')
-		ext = name[name.length-1]
+		ext = name.splice(name.length-1, 1)[0]
+		name = name.join('.')
 		entry.getData(new zip.TextWriter(), (text) =>
-			@getEvent('read').fire(text, ext)
+			@getEvent('read').fire(text, name, ext)
+			@getEvent('readEnd').fire() if index is max
 		)
