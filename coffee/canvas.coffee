@@ -231,7 +231,7 @@ class Bulb.Canvas extends CJS.Component
 
 	addSphere: -> @addObject(new THREE.SphereGeometry(1,16,16), 'Sphere')
 
-	addCube: -> @addObject(new THREE.BoxGeometry(1,1,1,1,1,1), 'Cube')
+	addCube: (name = 'Cube') -> @addObject(new THREE.BoxGeometry(1,1,1,1,1,1), name)
 
 	addCylinder: -> @addObject(new THREE.CylinderGeometry(1,1,1,8,1, no, 0, 2 * Math.PI), 'Cylinder')
 

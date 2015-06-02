@@ -46,7 +46,7 @@ class Bulb.UserData extends CJS.Component
 
 	getHtmlOfBool: (variable) -> '<td colspan="2"><label><input class="doCheckBoxChange" data-name="' + variable.name + '" type="checkbox" ' + (if @data[variable.name] then 'checked' else '') + '>' + variable.label + '</label></td>'
 
-	getHtmlOfString: (variable) -> '<th>' + variable.label + '</th><td><input class="doInputChange" data-name="' + variable.name + '" type="string"></td>'
+	getHtmlOfString: (variable) -> '<th>' + variable.label + '</th><td><input type="text" class="doInputChange" data-name="' + variable.name + '" value="' + (if @data[variable.name]? then @data[variable.name] else '') + '"></td>'
 
 	getHtml: ->
 		html = '<table>'

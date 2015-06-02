@@ -16,6 +16,7 @@ class Bulb.Exporter
 	getSettings: (canvas, callback) ->
 		objects = canvas.getObjectCollection().getAsArray('objects')
 		output = new THREE.Scene()
+		output.userData = canvas.getScene().userData
 		output.add(object) for object in objects
 		callback = 'var func = ' + callback
 		eval(callback)

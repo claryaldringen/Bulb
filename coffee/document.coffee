@@ -234,7 +234,7 @@ class Bulb.Document extends CJS.Document
 		@
 
 	finishLoad: ->
-		@loadCallback(@loadCallbackParam, @getCanvas().getScene())
+		@loadCallback(@loadCallbackParam, @getCanvas())
 		@getCanvas().restoreView()
 
 	addObjectToCanvas: (data) ->
