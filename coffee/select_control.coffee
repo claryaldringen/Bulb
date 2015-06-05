@@ -67,7 +67,7 @@ class Bulb.SelectControl
 				@unhighlightVector(no)
 				@active = no
 			vertexControl.addEventListener 'let', =>
-				@getEvent('saveStatus').fire()
+				@getEvent('saveStatus').fire() if vertexControl.getMoved()
 			@vertexControl = vertexControl
 		@vertexControl
 
@@ -92,30 +92,32 @@ class Bulb.SelectControl
 
 	unhighlightVector: (resetActual = yes)->
 		if @actualVector?
-			@scene.remove(@getVertexHelper().detach())
+			#@scene.remove(@getVertexHelper().detach())
 			@actualVector = null if resetActual
-			@getEvent('change').fire()
+			#@getEvent('change').fire()
 		@
 
 	selectVector: (add) ->
 		if @active
 			actualVectorIndex = @getVertexIndex(@actualVector)
-			@scene.remove(@getVertexControl())
-			switch add
-				when 0
-					if @selectedObject.selecteds[0] is actualVectorIndex then @selectedObject.selecteds = [] else @selectedObject.selecteds = [actualVectorIndex]
-					@neighbours = null
-				when 1
-					if @isSelected(actualVectorIndex) then @selectedObject.selecteds.splice(@selectedObject.selecteds.indexOf(actualVectorIndex),1) else @selectedObject.selecteds.push(actualVectorIndex)
-				when 2
-					@selectShortestPath(@selectedObject.selecteds[@selectedObject.selecteds.length-1], actualVectorIndex)
-				when 4
-					@floodFillSelect(actualVectorIndex)
-					@floodFill = no
+			if actualVectorIndex?
+				@scene.remove(@getVertexControl())
+				switch add
+					when 0
+						if @selectedObject.selecteds[0] is actualVectorIndex then @selectedObject.selecteds = [] else @selectedObject.selecteds = [actualVectorIndex]
+						@neighbours = null
+					when 1
+						if @isSelected(actualVectorIndex) then @selectedObject.selecteds.splice(@selectedObject.selecteds.indexOf(actualVectorIndex),1) else @selectedObject.selecteds.push(actualVectorIndex)
+					when 2
+						@selectShortestPath(@selectedObject.selecteds[@selectedObject.selecteds.length-1], actualVectorIndex)
+					when 4
+						@floodFillSelect(actualVectorIndex)
+						@floodFill = no
 
-			@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
-			@getEvent('selectVector').fire()
-			@getEvent('change').fire()
+				@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
+				@getEvent('selectVector').fire()
+				@getEvent('change').fire()
+			@
 
 	selectShortestPath: (start, end)->
 		vertexNeighboursList = @getNeighbors()
@@ -183,7 +185,8 @@ class Bulb.SelectControl
 		center
 
 	getVertexIndex: (vector) ->
-		return index for vertex,index in @selectedObject.geometry.vertices when vertex is vector
+		if @selectedObject.geometry?
+			return index for vertex,index in @selectedObject.geometry.vertices when vertex is vector
 		null
 
 	isNear: (mouse, face, vectorIndex) ->
@@ -198,6 +201,12 @@ class Bulb.SelectControl
 		return yes for id in @selectedObject.selecteds when id is index
 		no
 
+	setMoved: (moved) ->
+		@getVertexControl().setMoved(moved)
+		@
+
+	getMoved: -> @getVertexControl().getMoved()
+
 	moveSelected: (step, axis) ->
 		sub = new THREE.Vector3(0,0,0)
 		sub[ax] = step for ax in ['x','y','z'] when ax is axis
@@ -207,15 +216,16 @@ class Bulb.SelectControl
 	showVector: (intersect) ->
 		mouse = intersect.point
 		face = intersect.face
-		vertices = @selectedObject.geometry.vertices
-		highlighted = no
-		for letter in ['a','b', 'c']
-			index = face[letter]
-			if @isNear(mouse, face, index)
-				@highlightVector(vertices[index], face)
-				highlighted = yes
-				break
-		@unhighlightVector() if not highlighted
+		if @selectedObject.geometry?
+			vertices = @selectedObject.geometry.vertices
+			highlighted = no
+			for letter in ['a','b', 'c']
+				index = face[letter]
+				if @isNear(mouse, face, index)
+					@highlightVector(vertices[index], face)
+					highlighted = yes
+					break
+			@unhighlightVector() if not highlighted
 		@
 
 	update: ->

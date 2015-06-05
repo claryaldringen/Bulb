@@ -5,6 +5,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		@mouse = new THREE.Vector2()
 		@take = no
 		super(@camera, @domElement)
+		@moved = no
 
 	init: ->
 		@planes = []
@@ -24,6 +25,10 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		@planes[1].rotation.set( 0, Math.PI/2, 0 )
 		@planes[2].rotation.set( - Math.PI/2, 0, 0 )
 		@
+
+	getMoved: -> @moved
+
+	setMoved: (@moved) -> @
 
 	setAxis: (@axis) ->
 		for index in [0,1,2]
@@ -109,20 +114,22 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		@move(sub)
 
 	move: (step) ->
-		for index in @object.selecteds
-			vector = @object.geometry.vertices[index]
-			position = vector.clone()
+		if @object.selecteds.length
+			for index in @object.selecteds
+				vector = @object.geometry.vertices[index]
+				position = vector.clone()
+				position = @object.localToWorld(position) if @space is 'world'
+				position.add(step)
+				position = @object.worldToLocal(position) if @space is 'world'
+				vector.set(position.x, position.y, position.z)
+			position = @vertex.clone()
 			position = @object.localToWorld(position) if @space is 'world'
 			position.add(step)
 			position = @object.worldToLocal(position) if @space is 'world'
-			vector.set(position.x, position.y, position.z)
-		position = @vertex.clone()
-		position = @object.localToWorld(position) if @space is 'world'
-		position.add(step)
-		position = @object.worldToLocal(position) if @space is 'world'
-		@vertex.set(position.x, position.y, position.z)
-		@update()
-		@dispatchEvent({type: 'change'})
+			@vertex.set(position.x, position.y, position.z)
+			@update()
+			@dispatchEvent({type: 'change'})
+			@moved = yes
 		@
 
 	onPointerDown: (event) ->
@@ -169,4 +176,5 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 			@object.geometry.type = 'Geometry'
 		@dispatchEvent({type: 'let'})
 		@dispatchEvent({type: 'change'})
+		@moved = no
 

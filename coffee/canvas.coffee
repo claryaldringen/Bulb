@@ -42,6 +42,12 @@ class Bulb.Canvas extends CJS.Component
 
 	getControlAxis: -> @getSelectControl().getAxis() if @mode is Bulb.MODE_VERTICES
 
+	setMoved: (moved) ->
+		@getSelectControl().setMoved(moved)
+		@
+
+	getMoved: -> @getSelectControl().getMoved()
+
 	moveSelected: (step, axis) ->
 		@getSelectControl().moveSelected(step, axis)
 		@
@@ -297,7 +303,7 @@ class Bulb.Canvas extends CJS.Component
 		@
 
 	changeGeometry: ->
-		if @selectedObject?
+		if @selectedObject? and @selectedObject.geometry?
 			@selectedObject.geometry.dynamic = yes
 			@selectedObject.geometry.verticesNeedUpdate = yes
 			@selectedObject.geometry.normalsNeedUpdate = yes

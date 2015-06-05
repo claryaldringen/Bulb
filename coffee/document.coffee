@@ -4,9 +4,11 @@ class Bulb.Document extends CJS.Document
 	constructor: (id, parent) ->
 		super(id, parent)
 		@active = yes
+		@status = {statuses: [], position: 0}
 
 	clear: ->
-		window.indexedDB.deleteDatabase('Bulb')
+		delete(@status)
+		window.localStorage.clear()
 		window.document.location.reload(yes)
 
 	setActive: (@active) -> @
@@ -186,20 +188,26 @@ class Bulb.Document extends CJS.Document
 		link.click()
 
 	undo: ->
-		canvas = @getCanvas()
-		canvas.scene = null
-		@getObjectList().setItems([]).render()
-		canvas.getObjectCollection().clear('objects')
-		@getStorage().decrease().get(canvas, canvas.setJSON)
-		canvas.restoreView()
+		if @status.position
+			canvas = @getCanvas()
+			canvas.scene = null
+			@getObjectList().setItems([]).render()
+			canvas.getObjectCollection().clear('objects')
+			@status.position--
+			canvas.setJSON(@status.statuses[@status.position])
+			canvas.restoreView()
+		@
 
 	redo: ->
-		canvas = @getCanvas()
-		canvas.scene = null
-		@getObjectList().setItems([]).render()
-		canvas.getObjectCollection().clear('objects')
-		@getStorage().increase().get(canvas, canvas.setJSON)
-		canvas.restoreView()
+		if @status.position < @status.statuses.length-1
+			canvas = @getCanvas()
+			canvas.scene = null
+			@getObjectList().setItems([]).render()
+			canvas.getObjectCollection().clear('objects')
+			@status.position++
+			canvas.setJSON(@status.statuses[@status.position])
+			canvas.restoreView()
+		@
 
 	load: ->
 		el = document.createElement('input')
@@ -242,13 +250,12 @@ class Bulb.Document extends CJS.Document
 		@getCanvas().addLoadedObject(loader.parse(data))
 		@
 
-	getStorage: ->
-		@storage = new Bulb.Storage() if not @storage?
-		@storage
-
 	handleAddingObject: (items) -> @getObjectList().restore(items)
 
-	saveStatus: -> @getStorage().set(@getCanvas().getJSON())
+	saveStatus: ->
+		@status.statuses.push(@getCanvas().getJSON())
+		@status.position++
+		#@getStorage().set(@getCanvas().getJSON())
 
 	bindEvents: ->
 		super()
@@ -257,8 +264,12 @@ class Bulb.Document extends CJS.Document
 		canvas.getEvent('saveStatus').subscribe(@, @saveStatus)
 		@getObjectList().getEvent('remove').subscribe(canvas, canvas.remove)
 		window.addEventListener 'load', =>
-			canvas = @getCanvas()
-			@getStorage().get(canvas, canvas.setJSON)
+			status = JSON.parse(localStorage.getItem('status'))
+			if status.position? and status.statuses?
+				@status = status
+				@status.position = status.statuses.length
+				console.log @status
+				@undo()
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>
 			#console.log event.keyCode
@@ -337,6 +348,11 @@ class Bulb.Document extends CJS.Document
 				if event.keyCode in [38,39]
 					@getCanvas().moveSelected(step, axis)
 		window.addEventListener 'keyup', (event) =>
+			if event.keyCode in [37,38,39,40] and @getCanvas().getMoved()
+				@saveStatus()
+				@getCanvas().setMoved(no)
+		window.onbeforeunload = (event) =>
+			localStorage.setItem('status', JSON.stringify(@status))
 
 	getHtml: ->
 		toolbar = @getToolbar()
