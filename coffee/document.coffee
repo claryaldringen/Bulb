@@ -253,7 +253,7 @@ class Bulb.Document extends CJS.Document
 	handleAddingObject: (items) -> @getObjectList().restore(items)
 
 	saveStatus: ->
-		@status.statuses.push(@getCanvas().getJSON())
+		@status.statuses[@status.position] = @getCanvas().getJSON()
 		@status.position++
 		#@getStorage().set(@getCanvas().getJSON())
 
@@ -268,7 +268,6 @@ class Bulb.Document extends CJS.Document
 			if status.position? and status.statuses?
 				@status = status
 				@status.position = status.statuses.length
-				console.log @status
 				@undo()
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>
@@ -280,6 +279,8 @@ class Bulb.Document extends CJS.Document
 					canvas.remove(canvas.getSelectedObject().id)
 				if event.keyCode is 26
 					if event.shiftKey then @redo() else @undo()
+				if event.keyCode is 110
+					canvas.setControlAxis('n') if canvas.getMode() is Bulb.MODE_VERTICES
 				if event.keyCode is 120
 					if canvas.getMode() is Bulb.MODE_VERTICES
 						canvas.setControlAxis('x')
@@ -353,6 +354,7 @@ class Bulb.Document extends CJS.Document
 				@getCanvas().setMoved(no)
 		window.onbeforeunload = (event) =>
 			localStorage.setItem('status', JSON.stringify(@status))
+			console.log('saved')
 
 	getHtml: ->
 		toolbar = @getToolbar()

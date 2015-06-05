@@ -6,6 +6,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		@take = no
 		super(@camera, @domElement)
 		@moved = no
+		@normalArrow = null
 
 	init: ->
 		@planes = []
@@ -15,7 +16,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 	createPlanes: ->
 		planeGeometry = new THREE.PlaneGeometry( 50, 50, 2, 2 )
 		material = new THREE.MeshBasicMaterial( { wireframe: true } )
-		for index in [0,1,2]
+		for index in [0..3]
 			plane = new THREE.Object3D()
 			if not @axis? or ['x','y','z'][index] is @axis
 				plane = new THREE.Mesh(planeGeometry, material)
@@ -25,6 +26,40 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		@planes[1].rotation.set( 0, Math.PI/2, 0 )
 		@planes[2].rotation.set( - Math.PI/2, 0, 0 )
 		@
+
+	createArrows: ->
+		super()
+		@addNormalArrow()
+
+	addNormalArrow: ->
+		length = 0.8
+		color = 0x800080
+		@remove(@normalArrow) if @normalArrow?
+		if @axis is 'n'
+			@normalArrow = new THREE.ArrowHelper(@getNormal(),new THREE.Vector3(0,0,0), length, color, length/4, length/10)
+			@add(@normalArrow)
+		@
+
+	getNormal: ->
+		faces = @object.geometry.faces
+		selecteds = @object.selecteds
+		foo = []
+		for selected,i in selecteds
+			foo[i] = []
+			for face in faces
+				for key,j of {a: 0, b: 1, c: 2} when face[key] is selected
+					foo[i].push(face.vertexNormals[j])
+					break
+
+		total = new THREE.Vector3()
+		for normals in foo
+			vertexNormal = new THREE.Vector3()
+			for normal in normals
+				vertexNormal.add(normal)
+			vertexNormal.divideScalar(normals.length)
+			total.add(vertexNormal)
+		total.divideScalar(foo.length)
+		total
 
 	getMoved: -> @moved
 
@@ -73,6 +108,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 			@domElement.addEventListener "mousemove", (event) => @onPointerMove(event)
 			@domElement.addEventListener "mouseup", (event) => @onPointerUp(event)
 			@binded = yes
+		@addNormalArrow()
 		super(vertex, face, object)
 
 	detach: ->
@@ -102,14 +138,8 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 	moveToPoint: (point) ->
 		sub = point.clone()
 		sub.sub(@point)
-		if @arrowIndex is 3
-			length = sub.length()
-			sub = @getNormal().clone()
-			length *= -1 if point.length() - @point.length() < 0
-			sub.multiplyScalar(length)
-		else
-			axises = ['x','y','z']
-			sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
+		axises = ['x','y','z']
+		sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
 		@point = point.clone()
 		@move(sub)
 

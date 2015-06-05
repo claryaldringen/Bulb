@@ -32,24 +32,6 @@ class Bulb.VertexHelper extends THREE.Object3D
 			i++
 		@
 
-	getNormal: ->
-		vertices = @object.geometry.vertices
-		for key, index in ['a', 'b', 'c'] when vertices[@face[key]] is @vertex
-			normal = @face.vertexNormals[index]
-			break
-		normal
-
-	addNormalArrow: ->
-		length = 1
-		@remove(@arrows[3]) if @arrows[3]?
-		origin = new THREE.Vector3(0,0,0)
-		normal = @getNormal()
-		if normal?
-			@arrows[3] = new THREE.ArrowHelper(normal, origin, length, 0x800080, length/3, length/10)
-			@arrows[3].highlighted = no
-			@add(@arrows[3])
-		@
-
 	getMatrix: ->
 		if not @matrix
 			@object.updateMatrixWorld()
@@ -57,7 +39,6 @@ class Bulb.VertexHelper extends THREE.Object3D
 		@matrix
 
 	attach: (@vertex, @face, @object) ->
-		@addNormalArrow()
 		@update()
 
 	detach: ->

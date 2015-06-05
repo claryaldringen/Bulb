@@ -309,6 +309,7 @@ class Bulb.Canvas extends CJS.Component
 			@selectedObject.geometry.normalsNeedUpdate = yes
 			@selectedObject.geometry.computeFaceNormals()
 			@selectedObject.geometry.computeBoundingSphere()
+			@selectedObject.geometry.computeVertexNormals()
 			@wireframeHelper['select'].update()
 		@wireframeHelper['over'].update() if @wireframeHelper['over']?
 		@restoreView()
