@@ -5,6 +5,10 @@ class Bulb.VertexList extends CJS.Component
 
 	getVertices: -> @vertices
 
+	setGeometry: (@geometry) -> @
+
+	getGeometry: -> @geometry
+
 	setHighlighted: (@highlightedIndex) ->
 		@highlightedIndex = highlightedIndex*1 if highlightedIndex?
 		@
@@ -13,23 +17,14 @@ class Bulb.VertexList extends CJS.Component
 		@selectedIndex = selectedIndex*1
 		@
 
-	focusIn: (element) ->
-		@setSelected(element.dataset.index)
-		document.querySelector('#' + @id + ' .selected')?.classList.remove('selected')
-		element.parentElement.parentElement.classList.add('selected')
-		@getEvent('select').fire(@vertices[element.dataset.index])
+	format: (string) ->
+		string = string.replace(/([a-z](?=[A-Z]))/g, '$1 ')
+		(string.charAt(0).toUpperCase() + string.slice(1)).replace(' ', '&nbsp;')
 
 	change: (element) ->
-		@vertices[element.dataset.index][element.dataset.axis] = element.value
+		@geometry[element.dataset.property] = element.value if element.hasClass('doChangeGeometry')
+		@vertices[element.dataset.index][element.dataset.axis] = element.value if element.hasClass('doSelectVertex')
 		@getEvent('change').fire(@)
-
-	mouseOver: (element) ->
-		if element.hasClass('doSelectVertex')
-			@getEvent('highlight').fire(@vertices[element.dataset.index])
-
-	mouseOut: (element) ->
-		if element.hasClass('doSelectVertex')
-			@getEvent('dishighlight').fire()
 
 	renderFinish: ->
 		top = document.querySelector('#' + @id + ' .selected')?.offsetTop
@@ -51,4 +46,9 @@ class Bulb.VertexList extends CJS.Component
 			html += '</table>'
 		else
 			html = 'Please select some face.'
+		if @geometry?
+			html += '<table>'
+			for property,value of @geometry
+				html += '<tr><th>' + @format(property) + ':</th><td><input class="doChangeGeometry" data-property="' + property + '" type="number" value="' + value + '"></label></td></tr>'
+			html += '</table>'
 		html

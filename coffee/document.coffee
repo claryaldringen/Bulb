@@ -67,29 +67,22 @@ class Bulb.Document extends CJS.Document
 					child = new Bulb.MeshPropertyList(id, tabMenu)
 					child.getEvent('change').subscribe(@, @meshChange)
 				object = {position: null, rotation: null} if not object?
-				child.setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
+				child.setPosition(object.position).setRotation(object.rotation).setScale(object.scale).setObject(object)
 				@getCanvas().setMode(Bulb.MODE_MESH)
-			when 'geometry'
-				if not child?
-					child = new Bulb.GeometryPropertyList(id, tabMenu)
-					child.getEvent('change').subscribe(@, @geometryChange)
-				child.setGeometry(object.geometry.parameters)
 			when 'vertices'
 				canvas = @getCanvas().setMode(Bulb.MODE_VERTICES)
 				if not child?
 					child = new Bulb.VertexList(id, tabMenu)
 					child.getEvent('change').subscribe(canvas, canvas.changeGeometry)
+					child.getEvent('change').subscribe(@, @geometryChange)
+				child.setGeometry(object.geometry.parameters)
 				child.setVertices([object.selectedVector]).setHighlighted().setSelected() if object.selectedVector?
-			when 'userData'
-				if not child?
-					child = new Bulb.UserData(id, tabMenu)
-				child.setObject(object)
 
 	getProperties: ->
 		properties = @getChildById('properties')
 		if not properties
 			properties = new CJS.TabMenu('properties', @)
-			properties.addTab('mesh', 'Mesh', yes).addTab('geometry', 'Geometry').addTab('vertices', 'Vertices').addTab('userData', 'User Data')
+			properties.addTab('mesh', 'Mesh', yes).addTab('vertices', 'Vertices')
 			properties.getEvent('change').subscribe(@, @propertyTabChange).fire(properties)
 		properties
 
@@ -108,7 +101,9 @@ class Bulb.Document extends CJS.Document
 	geometryChange: (propertyList) -> @getCanvas().replaceObject(propertyList.getGeometry())
 
 	updateVertexList: (object) ->
-		@getProperties().render()
+		properties = @getProperties()
+		@propertyTabChange(properties)
+		properties.render()
 
 	highlightVertexList: (index) ->
 		properties = @getProperties()
@@ -316,7 +311,7 @@ class Bulb.Document extends CJS.Document
 					canvas = @getCanvas()
 					mode = canvas.getMode()
 					if mode is Bulb.MODE_MESH
-						@getProperties().selectTab(2)
+						@getProperties().selectTab(1)
 						canvas.setMode(Bulb.MODE_VERTICES)
 					if mode is Bulb.MODE_VERTICES
 						@getProperties().selectTab(0)
