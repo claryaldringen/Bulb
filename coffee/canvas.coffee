@@ -30,6 +30,10 @@ class Bulb.Canvas extends CJS.Component
 
 	getMode: -> @mode
 
+	toggleSelectMode: ->
+		@getSelectControl().toggleSelectMode()
+		@restoreView()
+
 	setFillSelect: ->
 		@getSelectControl().setFillSelect()
 		@
@@ -167,8 +171,8 @@ class Bulb.Canvas extends CJS.Component
 				@getSelectHelper().attach(@selectedObject)
 				@getEvent('vertexSelect').fire()
 			@selectControl.getEvent('saveStatus').subscribe @, => @getEvent('saveStatus').fire()
-			@selectControl.getEvent('mouseEnter').subscribe @, => @getTrackballControls().enabled = no
-			@selectControl.getEvent('mouseLeave').subscribe @, => @getTrackballControls().enabled = yes
+			#@selectControl.getEvent('mouseEnter').subscribe @, => @getTrackballControls().enabled = no
+			#@selectControl.getEvent('mouseLeave').subscribe @, => @getTrackballControls().enabled = yes
 		@selectControl
 
 	getSelectedObject: -> @selectedObject

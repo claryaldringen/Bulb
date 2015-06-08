@@ -6,6 +6,7 @@ class Bulb.SelectControl
 		@down = no
 		@events = []
 		@floodFill = no
+		@gizmoShowed = no
 		@domElement.addEventListener 'mousemove', (event) => @onPointerMove(event)
 		@domElement.addEventListener 'mousedown', (event) => @onPointerDown(event)
 		@domElement.addEventListener 'click', (event) => @onPointerClick(event)
@@ -69,6 +70,7 @@ class Bulb.SelectControl
 			vertexControl.addEventListener 'let', =>
 				@getEvent('saveStatus').fire() if vertexControl.getMoved()
 			@vertexControl = vertexControl
+			console.log 'done'
 		@vertexControl
 
 	getRaycaster: ->
@@ -85,23 +87,27 @@ class Bulb.SelectControl
 
 	highlightVector: (vector, face) ->
 		if vector? and vector isnt @actualVector
-			#@scene.add(@getVertexHelper().attach(vector, face, @selectedObject)) if not @isSelected(@getVertexIndex(vector))
 			@actualVector = vector
-			#@getEvent('change').fire()
 		@
 
 	unhighlightVector: (resetActual = yes)->
 		if @actualVector?
-			#@scene.remove(@getVertexHelper().detach())
 			@actualVector = null if resetActual
-			#@getEvent('change').fire()
+		@
+
+	toggleSelectMode: ->
+		if @gizmoShowed
+			@scene.remove(@getVertexControl())
+			@gizmoShowed = no
+		else
+			@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
+			@gizmoShowed = yes
 		@
 
 	selectVector: (add) ->
 		if @active
 			actualVectorIndex = @getVertexIndex(@actualVector)
 			if actualVectorIndex?
-				@scene.remove(@getVertexControl())
 				switch add
 					when 0
 						if @selectedObject.selecteds[0] is actualVectorIndex then @selectedObject.selecteds = [] else @selectedObject.selecteds = [actualVectorIndex]
@@ -114,7 +120,6 @@ class Bulb.SelectControl
 						@floodFillSelect(actualVectorIndex)
 						@floodFill = no
 
-				@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
 				@getEvent('selectVector').fire()
 				@getEvent('change').fire()
 			@
@@ -246,14 +251,15 @@ class Bulb.SelectControl
 				@getEvent('mouseLeave').fire()
 
 	onPointerClick: (event) ->
-		event.preventDefault()
-		add = 0
-		add = 1 if event.ctrlKey
-		add = 2 if event.shiftKey and @selectedObject.selecteds.length
-		add = 4 if @floodFill
-		@selectVector(add) if @selectedObject?
-		@active = yes
-		@down = no
+		if not @gizmoShowed
+			event.preventDefault()
+			add = 0
+			add = 1 if event.ctrlKey
+			add = 2 if event.shiftKey and @selectedObject.selecteds.length
+			add = 4 if @floodFill
+			@selectVector(add) if @selectedObject?
+			@active = yes
+			@down = no
 
 	onPointerMove: (event) ->
 		@active = no if @down
