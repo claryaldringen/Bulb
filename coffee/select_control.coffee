@@ -208,18 +208,11 @@ class Bulb.SelectControl
 	getMoved: -> @getVertexControl().getMoved()
 
 	moveSelected: (step, axis) ->
-		vertexControl = @getVertexControl()
-		if vertexControl.getAxis() isnt 'n'
-			sub = new THREE.Vector3(0,0,0)
-			sub[ax] = step for ax in ['x','y','z'] when ax is axis
-		else
-			normal = vertexControl.getNormal().clone()
-			normal.normalize()
-			normal.x *= step
-			normal.y *= step
-			normal.z *= step
-			sub = normal
-		vertexControl.move(sub)
+		@getVertexControl().move(step, axis)
+		@
+
+	setMathFunction: (type) ->
+		@getVertexControl().setMathFunction(Bulb.Math[type])
 		@
 
 	showVector: (intersect) ->

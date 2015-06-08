@@ -75,7 +75,8 @@ class Bulb.Document extends CJS.Document
 					child = new Bulb.VertexList(id, tabMenu)
 					child.getEvent('change').subscribe(canvas, canvas.changeGeometry)
 					child.getEvent('change').subscribe(@, @geometryChange)
-				child.setGeometry(object.geometry.parameters)
+					child.getEvent('changeFunc').subscribe(canvas, canvas.setMathFunction)
+				child.setGeometry(object.geometry?.parameters)
 				child.setVertices([object.selectedVector]).setHighlighted().setSelected() if object.selectedVector?
 
 	getProperties: ->
@@ -266,7 +267,7 @@ class Bulb.Document extends CJS.Document
 				@undo()
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>
-			#console.log event.keyCode
+			console.log event.keyCode
 			#console.log event.shiftKey
 			if @active
 				canvas = @getCanvas()
@@ -350,6 +351,7 @@ class Bulb.Document extends CJS.Document
 		window.onbeforeunload = (event) =>
 			localStorage.setItem('status', JSON.stringify(@status))
 			console.log('saved')
+		window.oncopy = (event) => alert('fuck')
 
 	getHtml: ->
 		toolbar = @getToolbar()

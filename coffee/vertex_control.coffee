@@ -7,6 +7,7 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		super(@camera, @domElement)
 		@moved = no
 		@normalArrow = null
+		@mathFunction = -> 1
 
 	init: ->
 		@planes = []
@@ -87,6 +88,10 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 
 	getArrows: -> @arrows
 
+	setMathFunction: (@mathFunction) -> @
+
+	getMathFunction: -> @mathFunction
+
 	highlight: (intersect) ->
 		colors = [0xff0000, 0x00ff00, 0x0000ff, 0x800080]
 		for arrow,index in @arrows
@@ -139,22 +144,40 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 		sub = point.clone()
 		sub.sub(@point)
 		axises = ['x','y','z']
-		sub[axis] = 0 for axis,index in axises when index isnt @arrowIndex
+		for axis,index in axises when index is @arrowIndex
+			@move(sub[axis], axis)
 		@point = point.clone()
-		@move(sub)
 
-	move: (step) ->
+	computeMove: (vector, axis, step) ->
+		distance = vector.distanceTo(@vertex)
+		func = @getMathFunction()
+		if @axis isnt 'n'
+			sub = new THREE.Vector3(0,0,0)
+			for ax in ['x','y','z'] when ax is axis
+				sub[ax] = func(distance) * step
+				break
+		else
+			normal = @getNormal().clone()
+			normal.normalize()
+			normal.x *= func(distance) * step
+			normal.y *= func(distance) * step
+			normal.z *= func(distance) * step
+			sub = normal
+		sub
+
+
+	move: (step, axis) ->
 		if @object.selecteds.length
 			for index in @object.selecteds
 				vector = @object.geometry.vertices[index]
 				position = vector.clone()
 				position = @object.localToWorld(position) if @space is 'world'
-				position.add(step)
+				position.add(@computeMove(vector, axis, step))
 				position = @object.worldToLocal(position) if @space is 'world'
 				vector.set(position.x, position.y, position.z)
 			position = @vertex.clone()
 			position = @object.localToWorld(position) if @space is 'world'
-			position.add(step)
+			position.add( @computeMove(@vertex, axis, step))
 			position = @object.worldToLocal(position) if @space is 'world'
 			@vertex.set(position.x, position.y, position.z)
 			@update()

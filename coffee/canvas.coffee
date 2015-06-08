@@ -52,6 +52,10 @@ class Bulb.Canvas extends CJS.Component
 		@getSelectControl().moveSelected(step, axis)
 		@
 
+	setMathFunction: (type) ->
+		@getSelectControl().setMathFunction(type)
+		@
+
 	getObjectCollection: ->
 		@objectCollection = new Bulb.ObjectCollection() if not @objectCollection?
 		@objectCollection
