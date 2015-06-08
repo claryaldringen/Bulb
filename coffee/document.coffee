@@ -88,6 +88,7 @@ class Bulb.Document extends CJS.Document
 		properties
 
 	selectObjectFromCanvas: (selectedObjectId) ->
+		@moveAxis = null
 		@getObjectList().setSelectedItemId(selectedObjectId).render()
 		properties = @getProperties()
 		@propertyTabChange(properties)
@@ -287,6 +288,7 @@ class Bulb.Document extends CJS.Document
 						id = tabMenu.getChildId(tab.id)
 						child = tabMenu.getChildById(id)
 						child.focusElement('x', canvas.getTransformMode())
+						@moveAxis = 'x'
 				if event.keyCode is 121
 					if canvas.getMode() is Bulb.MODE_VERTICES
 						canvas.setControlAxis('y')
@@ -297,6 +299,7 @@ class Bulb.Document extends CJS.Document
 						id = tabMenu.getChildId(tab.id)
 						child = tabMenu.getChildById(id)
 						child.focusElement('y', canvas.getTransformMode())
+						@moveAxis = 'y'
 				if event.keyCode is 122
 					if canvas.getMode() is Bulb.MODE_VERTICES
 						canvas.setControlAxis('z')
@@ -307,6 +310,7 @@ class Bulb.Document extends CJS.Document
 						id = tabMenu.getChildId(tab.id)
 						child = tabMenu.getChildById(id)
 						child.focusElement('z', canvas.getTransformMode())
+						@moveAxis = 'z'
 				if event.keyCode is 109
 					event.preventDefault()
 					canvas = @getCanvas()
@@ -354,6 +358,18 @@ class Bulb.Document extends CJS.Document
 			localStorage.setItem('status', JSON.stringify(@status))
 			console.log('saved')
 		window.oncopy = (event) => alert('fuck')
+		window.addEventListener 'mousemove', (event) =>
+			if @moveAxis?
+				diffX = event.clientX - @lastX if @lastX?
+				@lastX = event.clientX
+				diffY = event.clientY - @lastY if @lastY?
+				@lastY = event.clientY
+				diff = if Math.abs(diffX) > Math.abs(diffY) then diffX else diffY
+				diff *= -1 if @moveAxis in ['y','z']
+				@getCanvas().moveSelectedObject(diff*0.01, @moveAxis) if diff?
+
+	click: (element, event) ->
+		@moveAxis = null
 
 	getHtml: ->
 		toolbar = @getToolbar()

@@ -52,6 +52,11 @@ class Bulb.Canvas extends CJS.Component
 
 	getMoved: -> @getSelectControl().getMoved()
 
+	moveSelectedObject: (step, axis) ->
+		@selectedObject.position[axis] += Math.round(step*100)/100
+		@getEvent('transform').fire(@selectedObject)
+		@restoreView()
+
 	moveSelected: (step, axis) ->
 		@getSelectControl().moveSelected(step, axis)
 		@
@@ -350,7 +355,7 @@ class Bulb.Canvas extends CJS.Component
 		intersect = @getIntersect(event, @getObjectCollection().getAsArray('objects'))
 		if intersect?
 			@removeWireframeHelper('over') if intersect.object isnt @actualObject
-			@addWireframeHelper('over', intersect.object)
+			@addWireframeHelper('over', intersect.object) if intersect.object.uuid isnt @selectedObject.uuid
 			@actualObject = intersect.object
 		else
 			@removeWireframeHelper('over')

@@ -18,9 +18,9 @@ class Bulb.MeshPropertyList extends CJS.Component
 		@
 
 	setPosition: (@position) ->
-		if position?
+		if @position?
 			for axis in ['x','y','z']
-				value = position[axis]*1
+				value = @position[axis]*1
 				document.getElementById(@getPositionId(axis))?.value = Math.round(value*100)/100 if value?
 		@
 
@@ -50,9 +50,18 @@ class Bulb.MeshPropertyList extends CJS.Component
 		@getEvent('change').fire(@)
 
 	focusElement: (axis, type)->
-		document.getElementById(@getPositionId(axis)).focus() if type is 'translate'
-		document.getElementById(@getRotationId(axis)).focus() if type is 'rotate'
-		document.getElementById(@getScaleId(axis)).focus() if type is 'scale'
+		if type is 'translate'
+			el = document.getElementById(@getPositionId(axis))
+			el.focus()
+			el.select()
+		if type is 'rotate'
+			el = document.getElementById(@getRotationId(axis))
+			el.focus()
+			el.select()
+		if type is 'scale'
+			el = document.getElementById(@getScaleId(axis))
+			el.focus()
+			el.select()
 		@
 
 	checkRules: (rules) ->
