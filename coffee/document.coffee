@@ -73,7 +73,7 @@ class Bulb.Document extends CJS.Document
 				canvas = @getCanvas().setMode(Bulb.MODE_VERTICES)
 				if not child?
 					child = new Bulb.VertexList(id, tabMenu)
-					child.getEvent('change').subscribe(canvas, canvas.changeGeometry)
+					child.getEvent('changeVertices').subscribe(canvas, canvas.changeGeometry)
 					child.getEvent('change').subscribe(@, @geometryChange)
 					child.getEvent('changeFunc').subscribe(canvas, canvas.setMathFunction)
 				child.setGeometry(object.geometry?.parameters)
@@ -114,7 +114,8 @@ class Bulb.Document extends CJS.Document
 
 	selectVertexList: (index) ->
 		object = @getCanvas().getSelectedObject()
-		if object.selectedVector? then vectors = [object.selectedVector] else vectors = []
+		vectors = []
+		vectors.push(object.geometry.vertices[index]) for index in object.selecteds
 		properties = @getProperties()
 		properties.getChildById(properties.getChildId(properties.getSelectedTab().id)).setVertices(vectors)
 		properties.render()

@@ -22,12 +22,18 @@ class Bulb.VertexList extends CJS.Component
 		(string.charAt(0).toUpperCase() + string.slice(1)).replace(' ', '&nbsp;')
 
 	change: (element) ->
-		@geometry[element.dataset.property] = element.value if element.hasClass('doChangeGeometry')
-		@vertices[element.dataset.index][element.dataset.axis] = element.value if element.hasClass('doSelectVertex')
+		if element.hasClass('doChangeGeometry')
+			@geometry[element.dataset.property] = element.value
+			@getEvent('change').fire(@)
+		if element.hasClass('doSelectVertex')
+			for vertex,i in @vertices
+				@vertices[i][element.dataset.axis] = element.value*1
+				console.log @vertices
+			@getEvent('changeVertices').fire(@)
 		if element.hasClass('doSetFunc')
 			@func = element.options[element.selectedIndex].value
 			@getEvent('changeFunc').fire(@func)
-		@getEvent('change').fire(@)
+
 
 	renderFinish: ->
 		top = document.querySelector('#' + @id + ' .selected')?.offsetTop
@@ -36,19 +42,18 @@ class Bulb.VertexList extends CJS.Component
 		@
 
 	getHtml: ->
+		html = ''
 		if @vertices?
-			html = '<table><tr><th>X</th><th>Y</th><th>Z</th></tr>'
-			for vertex,index in @vertices
-				cssClass = ''
-				if @highlightedIndex is index then cssClass = 'highlighted'
-				if @selectedIndex is index then cssClass = 'selected'
-				html += '<tr class="' + cssClass + '">'
-				for axis in ['x','y','z']
-					html += '<td><input class="doSelectVertex" data-index="' + index + '" data-axis="' + axis + '" type="number" value="' + Math.round(vertex[axis]*100)/100 + '" step="0.01"></td>'
-				html += '</tr>'
+			html += '<table><tr><th>X</th><th>Y</th><th>Z</th></tr>'
+			vertex = @vertices[0] if @vertices.length is 1
+			html += '<tr>'
+			for axis in ['x','y','z']
+				val = ''
+				val = Math.round(vertex[axis]*100)/100 if vertex
+				html += '<td><input class="doSelectVertex" data-axis="' + axis + '" type="number" value="' + val + '" step="0.01"></td>'
+			html += '</tr>'
 			html += '</table>'
-		else
-			html = 'Please select some face.<br>'
+		html += '<br>'
 		if @geometry?
 			html += '<table>'
 			for property,value of @geometry

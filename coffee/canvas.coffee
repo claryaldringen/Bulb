@@ -317,6 +317,7 @@ class Bulb.Canvas extends CJS.Component
 
 	changeGeometry: ->
 		if @selectedObject? and @selectedObject.geometry?
+			console.log @selectedObject.geometry.vertices
 			@selectedObject.geometry.dynamic = yes
 			@selectedObject.geometry.verticesNeedUpdate = yes
 			@selectedObject.geometry.normalsNeedUpdate = yes
