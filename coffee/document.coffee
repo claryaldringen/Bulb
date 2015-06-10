@@ -186,11 +186,13 @@ class Bulb.Document extends CJS.Document
 		link.click()
 
 	undo: ->
+		console.log @status
 		if @status.position
 			canvas = @getCanvas()
 			canvas.scene = null
 			@getObjectList().setItems([]).render()
 			canvas.getObjectCollection().clear('objects')
+			@status.position-- if @status.statuses.length is @status.position
 			@status.position--
 			canvas.setJSON(@status.statuses[@status.position])
 			canvas.restoreView()
@@ -253,7 +255,6 @@ class Bulb.Document extends CJS.Document
 	saveStatus: ->
 		@status.statuses[@status.position] = @getCanvas().getJSON()
 		@status.position++
-		#@getStorage().set(@getCanvas().getJSON())
 
 	bindEvents: ->
 		super()
@@ -265,7 +266,7 @@ class Bulb.Document extends CJS.Document
 			status = JSON.parse(localStorage.getItem('status'))
 			if status.position? and status.statuses?
 				@status = status
-				@status.position = status.statuses.length
+				@status.position = status.position+1
 				@undo()
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>

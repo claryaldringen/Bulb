@@ -94,7 +94,7 @@ class Bulb.Canvas extends CJS.Component
 		for child,index in @scene.children when  child.id is @selectedObject.id
 			selected = index
 			break
-		{camera: @getCamera().toJSON(), scene: json, selected: selected, mode: @mode}
+		{scene: json, selected: selected, mode: @mode}
 
 	getRenderer: ->
 		@renderer = new THREE.WebGLRenderer() if not @renderer?
@@ -121,6 +121,7 @@ class Bulb.Canvas extends CJS.Component
 		scene.add(ambientLight)
 		@selectedObject = scene
 		@addLight()
+		@parent.saveStatus() if not @parent.status.statuses.length
 
 	getCamera: ->
 		if not @camera?
@@ -218,14 +219,6 @@ class Bulb.Canvas extends CJS.Component
 	setJSON: (json) ->
 		if json?
 			loader = new THREE.ObjectLoader()
-			loadedCamera = loader.parse(json.camera)
-			camera = @getCamera()
-			camera.position.copy(loadedCamera.position)
-			camera.rotation.copy(loadedCamera.rotation)
-			camera.aspect = loadedCamera.aspect
-			camera.near = loadedCamera.near
-			camera.far = loadedCamera.far
-
 			scene = loader.parse(json.scene)
 			@getScene()
 			while (scene.children.length > 0)
