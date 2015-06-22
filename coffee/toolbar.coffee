@@ -8,6 +8,7 @@ class Bulb.Toolbar extends CJS.Component
 		@getEvent('doUndo').fire() if element.hasClass('doUndo')
 		@getEvent('doRedo').fire() if element.hasClass('doRedo')
 		@getEvent('doSettings').fire() if element.hasClass('doSettings')
+		@getEvent('doHelp').fire() if element.hasClass('doHelp')
 		@getEvent('addVector').fire() if element.hasClass('doAddVector')
 		@getEvent('addCircle').fire() if element.hasClass('doAddCircle')
 		@getEvent('addPlane').fire() if element.hasClass('doAddPlane')
@@ -38,6 +39,7 @@ class Bulb.Toolbar extends CJS.Component
 		html += '<div class="button doUndo" title="Undo (Ctrl+Z)"><img src="./images/arrow_undo.png" width="16" height="16"></div>'
 		html += '<div class="button doRedo" title="Redo (Ctrl+Shift+Z)"><img src="./images/arrow_redo.png" width="16" height="16"></div>'
 		html += '<div class="button doSettings" title="Settings"><img src="./images/wrench.png" width="16" height="16"></div>'
+		html += '<div class="button doHelp" title="Help"><img src="./images/help.png" width="16" height="16"></div>'
 		html += '<div class="button doAddVector" title="Vector"><img src="./images/vector.png" width="16" height="16"></div>'
 		html += '<div class="button doAddCircle" title="Circle"><img src="./images/circle.png" width="16" height="16"></div>'
 		html += '<div class="button doAddPlane" title="Plane"><img src="./images/plane.png" width="16" height="16"></div>'

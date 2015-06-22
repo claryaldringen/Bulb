@@ -19,6 +19,16 @@ class CJS.TabMenu extends CJS.Component
 		@tabs.push({id: id, label: label, selected: selected})
 		@
 
+	removeTab: (id) ->
+		for tab,i in @tabs when tab.id is id
+			@tabs.splice(i, 1)
+			break
+		@
+
+	hasTab: (id) ->
+		return yes for tab in @tabs when tab.id is id
+		no
+
 	click: (element) ->
 		if element.hasClass('doChangeTab')
 			for tab in @tabs

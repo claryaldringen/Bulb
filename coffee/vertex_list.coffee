@@ -53,22 +53,21 @@ class Bulb.VertexList extends CJS.Component
 				html += '<td><input class="doSelectVertex" data-axis="' + axis + '" type="number" value="' + val + '" step="0.01"></td>'
 			html += '</tr>'
 			html += '</table>'
-		html += '<br>'
+			html += '<br>'
+		html += '<label>Move Function: <select class="doSetFunc">'
+		html += '<option value="constant" ' + (if @func is 'constant' then 'selected' else '') + '>Constant</option>'
+		html += '<option value="linear" ' + (if @func is 'linear' then 'selected' else '') + '>Linear</option>'
+		html += '<option value="quadratic" ' + (if @func is 'quadratic' then 'selected' else '') + '>Quadratic</option>'
+		html += '<option value="exponential" ' + (if @func is 'exponential' then 'selected' else '') + '>Exponential</option>'
+		html += '<option value="logarithm" ' + (if @func is 'logarithm' then 'selected' else '') + '>Logarithm</option>'
+		html += '<option value="hyperbolic" ' + (if @func is 'hyperbolic' then 'selected' else '') + '>Hyperbolic</option>'
+		html += '<option value="sinus" ' + (if @func is 'sinus' then 'selected' else '') + '>Sinus</option>'
+		html += '<option value="cosinus" ' + (if @func is 'cosinus' then 'selected' else '') + '>Cosinus</option>'
+		html += '</select></label>'
 		if @geometry?
 			html += '<table>'
 			for property,value of @geometry
 				html += '<tr><th>' + @format(property) + ':</th><td><input class="doChangeGeometry" data-property="' + property + '" type="number" value="' + value + '"></label></td></tr>'
 			html += '</table>'
-		else
-			html += '<label>Move Function: <select class="doSetFunc">'
-			html += '<option value="constant" ' + (if @func is 'constant' then 'selected' else '') + '>Constant</option>'
-			html += '<option value="linear" ' + (if @func is 'linear' then 'selected' else '') + '>Linear</option>'
-			html += '<option value="quadratic" ' + (if @func is 'quadratic' then 'selected' else '') + '>Quadratic</option>'
-			html += '<option value="exponential" ' + (if @func is 'exponential' then 'selected' else '') + '>Exponential</option>'
-			html += '<option value="logarithm" ' + (if @func is 'logarithm' then 'selected' else '') + '>Logarithm</option>'
-			html += '<option value="hyperbolic" ' + (if @func is 'hyperbolic' then 'selected' else '') + '>Hyperbolic</option>'
-			html += '<option value="sinus" ' + (if @func is 'sinus' then 'selected' else '') + '>Sinus</option>'
-			html += '<option value="cosinus" ' + (if @func is 'cosinus' then 'selected' else '') + '>Cosinus</option>'
-			html += '</select></label>'
 		html
 

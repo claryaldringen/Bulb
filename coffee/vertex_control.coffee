@@ -107,14 +107,14 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 					@dispatchEvent({type: 'change'})
 		@
 
-	attach: (vertex, face, object) ->
+	attach: (vertex, object) ->
 		if not @binded
 			@domElement.addEventListener "mousedown", (event) => @onPointerDown(event)
 			@domElement.addEventListener "mousemove", (event) => @onPointerMove(event)
 			@domElement.addEventListener "mouseup", (event) => @onPointerUp(event)
 			@binded = yes
 		@addNormalArrow()
-		super(vertex, face, object)
+		super(vertex, object)
 
 	detach: ->
 		if @binded

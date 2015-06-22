@@ -22,6 +22,9 @@ class Bulb.Canvas extends CJS.Component
 					@getSelectControl().setSelectedObject(@selectedObject)
 				if mode is Bulb.MODE_MESH
 					@getSelectControl().deactivate()
+					if @selectHelper?
+						scene.remove(@selectHelper)
+						@selectHelper = null
 					controls.attach(@selectedObject) if not (@selectedObject instanceof THREE.Scene)
 					scene.add(controls)
 				@restoreView()
@@ -57,7 +60,7 @@ class Bulb.Canvas extends CJS.Component
 		@getEvent('transform').fire(@selectedObject)
 		@restoreView()
 
-	moveSelected: (step, axis) ->
+	moveSelectedVertex: (step, axis) ->
 		@getSelectControl().moveSelected(step, axis)
 		@
 
@@ -177,8 +180,6 @@ class Bulb.Canvas extends CJS.Component
 				@getSelectHelper().attach(@selectedObject)
 				@getEvent('vertexSelect').fire()
 			@selectControl.getEvent('saveStatus').subscribe @, => @getEvent('saveStatus').fire()
-			#@selectControl.getEvent('mouseEnter').subscribe @, => @getTrackballControls().enabled = no
-			#@selectControl.getEvent('mouseLeave').subscribe @, => @getTrackballControls().enabled = yes
 		@selectControl
 
 	getSelectedObject: -> @selectedObject
@@ -227,7 +228,7 @@ class Bulb.Canvas extends CJS.Component
 				@getObjectCollection().add('objects', object)
 			objects = @getObjectCollection().getAsArray('objects')
 			@getEvent('objectAdded').fire(objects)
-			if json.selected?
+			if json.selected? and @scene.children[json.selected]
 				@mode = null
 				@selectHelper = null
 				@selectControl = null
@@ -237,22 +238,22 @@ class Bulb.Canvas extends CJS.Component
 				@restoreView()
 		@
 
-	addCircle: -> @addObject(new THREE.CircleGeometry(1,8, 0, 2 * Math.PI), 'Circle')
+	addCircle: (name = 'Circle') -> @addObject(new THREE.CircleGeometry(1,8, 0, 2 * Math.PI), name)
 
-	addPlane: -> @addObject(new THREE.PlaneGeometry(1,1), 'Plane')
+	addPlane: (name = 'Plane') -> @addObject(new THREE.PlaneGeometry(1,1), name)
 
-	addSphere: -> @addObject(new THREE.SphereGeometry(1,16,16), 'Sphere')
+	addSphere: (name = 'Sphere') -> @addObject(new THREE.SphereGeometry(1,16,16), name)
 
 	addCube: (name = 'Cube') -> @addObject(new THREE.BoxGeometry(1,1,1,1,1,1), name)
 
-	addCylinder: -> @addObject(new THREE.CylinderGeometry(1,1,1,8,1, no, 0, 2 * Math.PI), 'Cylinder')
+	addCylinder: (name = 'Cylinder') -> @addObject(new THREE.CylinderGeometry(1,1,1,8,1, no, 0, 2 * Math.PI), name)
 
-	addTorus: -> @addObject(new THREE.TorusGeometry(1,0.5,32,32), 'Torus')
+	addTorus: (name = 'Torus') -> @addObject(new THREE.TorusGeometry(1,0.5,32,32), name)
 
-	addVector: ->
+	addVector: (name = 'Vector') ->
 		geometry = new THREE.Geometry()
 		geometry.vertices.push(new THREE.Vector3(0,0,0))
-		@addObject(geometry, 'Vector')
+		@addObject(geometry, name)
 
 	getSelectHelper: ->
 		if not @selectHelper?
@@ -286,6 +287,10 @@ class Bulb.Canvas extends CJS.Component
 			control = @getTransformControls()
 			control.detach(control.getAttached())
 			@transformControls = null
+			if @selectHelper?
+				scene.remove(@selectHelper)
+				@selectHelper = null
+			@setMode(Bulb.MODE_MESH)
 		scene.remove(object)
 		@getObjectCollection().remove('objects', object)
 		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
@@ -305,12 +310,13 @@ class Bulb.Canvas extends CJS.Component
 			when 'PlaneGeometry' then @selectedObject.geometry = new THREE.PlaneGeometry(params.width*1, params.height*1, params.widthSegments*1, params.heightSegments*1)
 			when 'SphereGeometry' then @selectedObject.geometry = new THREE.SphereGeometry(params.radius*1, params.widthSegments*1, params.heightSegments*1, params.phiStart*1, params.phiLength*1, params.thetaStart*1, params.thetaLength*1)
 			when 'TorusGeometry' then @selectedObject.geometry = new THREE.TorusGeometry(params.radius*1, params.tube*1, params.radialSegments*1, params.tubularSegments*1, params.arc*1)
+		@removeWireframeHelper('select')
+		@addWireframeHelper('select', @selectedObject)
 		@changeGeometry()
 		@
 
 	changeGeometry: ->
 		if @selectedObject? and @selectedObject.geometry?
-			console.log @selectedObject.geometry.vertices
 			@selectedObject.geometry.dynamic = yes
 			@selectedObject.geometry.verticesNeedUpdate = yes
 			@selectedObject.geometry.normalsNeedUpdate = yes

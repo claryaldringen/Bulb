@@ -44,8 +44,7 @@ class Bulb.Zipper
 	getEntryFile: (entry, index, max) ->
 		name = entry.filename.split('.')
 		ext = name.splice(name.length-1, 1)[0]
-		name = name.join('.')
 		entry.getData(new zip.TextWriter(), (text) =>
-			@getEvent('read').fire(text, name, ext)
+			@getEvent('read').fire(text, ext)
 			@getEvent('readEnd').fire() if index is max
 		)

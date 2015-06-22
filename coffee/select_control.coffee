@@ -7,7 +7,6 @@ class Bulb.SelectControl
 		@events = []
 		@floodFill = no
 		@gizmoShowed = no
-		@domElement.addEventListener 'mousemove', (event) => @onPointerMove(event)
 		@domElement.addEventListener 'mousedown', (event) => @onPointerDown(event)
 		@domElement.addEventListener 'click', (event) => @onPointerClick(event)
 
@@ -29,8 +28,6 @@ class Bulb.SelectControl
 		@active = yes
 		@
 
-	getSelectedObject: -> @selectedObject
-
 	deactivate: ->
 		@scene.remove(@vertexControl) if @vertexControl?
 		@scene.remove(@vertexHelper) if @vertexHelper?
@@ -40,12 +37,10 @@ class Bulb.SelectControl
 		@active = yes
 		@unhighlightVector()
 		@actualVector = null
-		@selectedObject = null
 		@
 
 	setSpace: (space) ->
 		@getVertexControl().setSpace(space)
-		@getVertexHelper().setSpace(space)
 		@
 
 	setAxis: (axis) ->
@@ -53,12 +48,6 @@ class Bulb.SelectControl
 		@
 
 	getAxis: -> @getVertexControl().getAxis()
-
-	getVertexHelper: ->
-		if not @vertexHelper?
-			vertexHelper = new Bulb.VertexHelper(@camera, @domElement)
-			@vertexHelper = vertexHelper
-		@vertexHelper
 
 	getVertexControl: ->
 		if not @vertexControl?
@@ -85,14 +74,13 @@ class Bulb.SelectControl
 		intersects = raycaster.intersectObjects(objects, yes)
 		if intersects[0]? then intersects[0] else null
 
-	highlightVector: (vector, face) ->
+	highlightVector: (vector) ->
 		if vector? and vector isnt @actualVector
 			@actualVector = vector
 		@
 
 	unhighlightVector: (resetActual = yes)->
-		if @actualVector?
-			@actualVector = null if resetActual
+		@actualVector = null if @actualVector? and resetActual
 		@
 
 	toggleSelectMode: ->
@@ -100,7 +88,7 @@ class Bulb.SelectControl
 			@scene.remove(@getVertexControl())
 			@gizmoShowed = no
 		else
-			@scene.add(@getVertexControl().attach(@getGizmoPosition(), @intersect.face, @selectedObject)) if @selectedObject.selecteds.length
+			@scene.add(@getVertexControl().attach(@getGizmoPosition(), @selectedObject)) if @selectedObject.selecteds? and @selectedObject.selecteds.length
 			@gizmoShowed = yes
 		@
 
@@ -194,14 +182,6 @@ class Bulb.SelectControl
 			return index for vertex,index in @selectedObject.geometry.vertices when vertex is vector
 		null
 
-	isNear: (mouse, face, vectorIndex) ->
-		mouse = mouse.clone()
-		vertices = @selectedObject.geometry.vertices
-		near = vertices[vectorIndex].distanceTo(vertices[face.a].clone().add(vertices[face.b]).add(vertices[face.c]).divideScalar(3))
-		@selectedObject.worldToLocal(mouse)
-		vertices[vectorIndex].distanceTo(mouse) < near
-
-
 	isSelected: (index) ->
 		return yes for id in @selectedObject.selecteds when id is index
 		no
@@ -221,18 +201,17 @@ class Bulb.SelectControl
 		@
 
 	showVector: (intersect) ->
-		mouse = intersect.point
+		mouse = @selectedObject.worldToLocal(intersect.point)
 		face = intersect.face
 		if @selectedObject.geometry?
 			vertices = @selectedObject.geometry.vertices
-			highlighted = no
+			min = Infinity
 			for letter in ['a','b', 'c']
-				index = face[letter]
-				if @isNear(mouse, face, index)
-					@highlightVector(vertices[index], face)
-					highlighted = yes
-					break
-			@unhighlightVector() if not highlighted
+				distance = vertices[face[letter]].distanceTo(mouse)
+				if distance < min
+					min = distance
+					index = face[letter]
+			@highlightVector(vertices[index])
 		@
 
 	update: ->
@@ -245,13 +224,12 @@ class Bulb.SelectControl
 			@intersect = @getIntersect(event, [@selectedObject])
 			if @intersect?
 				@showVector(@intersect)
-				@getEvent('mouseEnter').fire()
 			else
 				@unhighlightVector()
-				@getEvent('mouseLeave').fire()
 
 	onPointerClick: (event) ->
 		if not @gizmoShowed
+			@mouseOverFace(event)
 			event.preventDefault()
 			add = 0
 			add = 1 if event.ctrlKey
@@ -260,10 +238,6 @@ class Bulb.SelectControl
 			@selectVector(add) if @selectedObject?
 			@active = yes
 			@down = no
-
-	onPointerMove: (event) ->
-		@active = no if @down
-		@mouseOverFace(event) if @active
 
 	onPointerDown: ->
 		@down = yes

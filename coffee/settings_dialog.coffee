@@ -39,6 +39,7 @@ class Bulb.SettingsDialog extends Bulb.Dialog
 		@getTypedefControl().save()
 		@getScriptControl().save()
 		@getPackControl().save()
+		@getEvent('save').fire()
 		@
 
 	click: (element) ->

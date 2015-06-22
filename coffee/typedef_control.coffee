@@ -64,7 +64,7 @@ class Bulb.TypedefControl extends CJS.Component
 		html = ''
 		for variable,i in @variables
 			html += '<table>'
-			html += '<tr><th>Name</th><th>Label</th><th>Type</th></tr>'
+			html += '<tr><th>Name</th><th>Label</th><th>Type</th><th>Actions</th></tr>'
 			html += '<tr>'
 			html += '<td><input type="text" data-index="' + i + '" class="doNameChange" value="' + variable.name + '"></td>'
 			html += '<td><input type="text" data-index="' + i + '" class="doLabelChange" value="' + variable.label + '"></td>'
@@ -72,7 +72,8 @@ class Bulb.TypedefControl extends CJS.Component
 			html += '<option value="string" ' + (if variable.type is 'string' then 'selected' else '') + '>String</option>'
 			html += '<option value="bool" ' + (if variable.type is 'bool' then 'selected' else '') + '>Boolean</option>'
 			html += '<option value="enum" ' + (if variable.type is 'enum' then 'selected' else '') + '>Enumerable</option>'
-			html += '</select>'
+			html += '</select></td>'
+			html += '<td>'
 			html += '<img src="./images/cross.png" title="Delete" data-index="' + i + '" class="doDelete">&nbsp;'
 			html += '<img src="./images/add.png" title="Add Option" data-index="' + i + '" class="doOptionAdd">&nbsp;' if variable.type is 'enum'
 			html += '<img src="./images/page_add.png" title="Add Rule" data-index="' + i + '" class="doAddRule">'
@@ -81,17 +82,18 @@ class Bulb.TypedefControl extends CJS.Component
 			html += '<img src="./images/arrow_up.png" title="Move up" data-index="' + i + '" class="doMoveUp">' if i > 0
 			html += '</td>'
 			if variable.type is 'enum'
-				html += '</tr><tr><td colspan="3">'
-				html += '<table><tr>'
+				html += '</tr><tr><td colspan="4">'
+				html += '<table class="options"><tr>'
+				html += '<th>Name:<br>Label:</th>'
 				for option,oi in variable.options
 					html += '<td>'
 					html += '<input type="text" value="' + option.value + '" data-index="' + i + '" data-oi="' + oi + '" class="doOptionValueChange"><br>'
-					html += '<input type="text" value="' + option.label + '" data-index="' + i + '" data-oi="' + oi + '" class="doOptionLabelChange"><br>'
-					html += '<img src="./images/cross.png" title="Delete" data-index="' + i + '" data-oi="' + oi + '" class="doOptionDelete">&nbsp;'
+					html += '<img src="./images/cross.png" title="Delete" data-index="' + i + '" data-oi="' + oi + '" class="doOptionDelete">'
+					html += '<input class="option_label" type="text" value="' + option.label + '" data-index="' + i + '" data-oi="' + oi + '" class="doOptionLabelChange"></td>'
 				html += '</tr></table>'
 				html += '</td>'
 			html += '</tr>'
-			html += '<tr><td colspan="3">'
+			html += '<tr><td colspan="4">'
 			html += 'Visible if ' if variable.rules.length
 			for rule,ri in variable.rules
 				options = []
@@ -121,5 +123,5 @@ class Bulb.TypedefControl extends CJS.Component
 			html+='</td></tr>'
 			html += '</table>'
 		html += '<table><tr>'
-		html += '<td><button class="doAddVariable">Add Variable</button></td>'
+		html += '<td class="button"><button class="doAddVariable">Add Variable</button></td>'
 		html += '</tr></table>'

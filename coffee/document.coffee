@@ -8,7 +8,7 @@ class Bulb.Document extends CJS.Document
 
 	clear: ->
 		delete(@status)
-		window.localStorage.clear()
+		window.localStorage.removeItem('status')
 		window.document.location.reload(yes)
 
 	setActive: (@active) -> @
@@ -20,7 +20,6 @@ class Bulb.Document extends CJS.Document
 			canvas.getEvent('select').subscribe(@, @selectObjectFromCanvas)
 			canvas.getEvent('transform').subscribe(@, @transform)
 			canvas.getEvent('geometryChange').subscribe(@, @updateVertexList)
-			canvas.getEvent('vertexHighlight').subscribe(@, @highlightVertexList)
 			canvas.getEvent('vertexSelect').subscribe(@, @selectVertexList)
 		canvas
 
@@ -35,6 +34,7 @@ class Bulb.Document extends CJS.Document
 			toolbar.getEvent('doUndo').subscribe(@, @undo)
 			toolbar.getEvent('doRedo').subscribe(@, @redo)
 			toolbar.getEvent('doSettings').subscribe(@, => @getSettingsDialog().open('Settings'))
+			toolbar.getEvent('doHelp').subscribe(@, => @getHelpDialog().open('Help'))
 			toolbar.getEvent('addVector').subscribe(canvas, canvas.addVector)
 			toolbar.getEvent('addCircle').subscribe(canvas, canvas.addCircle)
 			toolbar.getEvent('addPlane').subscribe(canvas, canvas.addPlane)
@@ -77,13 +77,12 @@ class Bulb.Document extends CJS.Document
 					child.getEvent('change').subscribe(@, @geometryChange)
 					child.getEvent('changeFunc').subscribe(canvas, canvas.setMathFunction)
 				child.setGeometry(object.geometry?.parameters)
-				child.setVertices([object.selectedVector]).setHighlighted().setSelected() if object.selectedVector?
 
 	getProperties: ->
 		properties = @getChildById('properties')
 		if not properties
 			properties = new CJS.TabMenu('properties', @)
-			properties.addTab('mesh', 'Mesh', yes).addTab('vertices', 'Vertices')
+			properties.addTab('mesh', 'Mesh', yes)
 			properties.getEvent('change').subscribe(@, @propertyTabChange).fire(properties)
 		properties
 
@@ -91,25 +90,30 @@ class Bulb.Document extends CJS.Document
 		@moveAxis = null
 		@getObjectList().setSelectedItemId(selectedObjectId).render()
 		properties = @getProperties()
+		if selectedObjectId?
+			properties.addTab('vertices', 'Vertices') if not properties.hasTab('vertices')
+		else
+			properties.removeTab('vertices')
 		@propertyTabChange(properties)
 		properties.render()
 
 	selectObjectFromObjectList: (selectedObjectId) ->
 		@getCanvas().selectObject(selectedObjectId, no)
 		properties = @getProperties()
+		if selectedObjectId?
+			properties.addTab('vertices', 'Vertices') if not properties.hasTab('vertices')
+		else
+			properties.removeTab('vertices')
 		@propertyTabChange(properties)
 		properties.render()
 
-	geometryChange: (propertyList) -> @getCanvas().replaceObject(propertyList.getGeometry())
+	geometryChange: (propertyList) ->
+		@getCanvas().replaceObject(propertyList.getGeometry())
+		@saveStatus()
 
 	updateVertexList: (object) ->
 		properties = @getProperties()
 		@propertyTabChange(properties)
-		properties.render()
-
-	highlightVertexList: (index) ->
-		properties = @getProperties()
-		properties.getChildById(properties.getChildId(properties.getSelectedTab().id)).setHighlighted(index)
 		properties.render()
 
 	selectVertexList: (index) ->
@@ -130,7 +134,17 @@ class Bulb.Document extends CJS.Document
 		object.rotation.set(rotation.x, rotation.y, rotation.z)
 		object.scale.set(scale.x, scale.y, scale.z)
 		object.lookAt(new THREE.Vector3(0, 0, 0)) if object instanceof THREE.Camera
+		@saveStatus()
 		canvas.restoreView()
+
+	removeMesh: (objectId) ->
+		canvas = @getCanvas()
+		selectedObject = canvas.getSelectedObject()
+		if selectedObject.id*1 is objectId*1
+			@getProperties().selectTab(0)
+			@selectObjectFromCanvas(null)
+		canvas.remove(objectId)
+		@
 
 	transform: (object) ->
 		tabMenu = @getProperties()
@@ -157,7 +171,17 @@ class Bulb.Document extends CJS.Document
 	getSettingsDialog: ->
 		child = @getChildById('settingsDialog')
 		if not child?
-			child = new Bulb.SettingsDialog('saveDialog', @)
+			tabMenu = @getProperties()
+			meshTab = tabMenu.getChildById(tabMenu.getChildId('mesh'))
+			tab = tabMenu.getSelectedTab()
+			child = new Bulb.SettingsDialog('settingsDialog', @)
+			child.getEvent('save').subscribe(meshTab, meshTab.reloadVariables)
+		child
+
+	getHelpDialog: ->
+		child = @getChildById('helpDialog')
+		if not child?
+			child = new Bulb.HelpDialog('helpDialog', @)
 		child
 
 	getExporter: ->
@@ -228,7 +252,7 @@ class Bulb.Document extends CJS.Document
 				reader.readAsText(file)
 		el.click()
 
-	parseFile: (text, name, ext) ->
+	parseFile: (text, ext) ->
 		if ext is 'obj'
 			@addObjectToCanvas(text)
 		else
@@ -242,8 +266,11 @@ class Bulb.Document extends CJS.Document
 		@
 
 	finishLoad: ->
-		@loadCallback(@loadCallbackParam, @getCanvas())
-		@getCanvas().restoreView()
+		window.setTimeout =>
+			@loadCallback(@loadCallbackParam, @getCanvas())
+			@getCanvas().restoreView()
+		,100
+		@
 
 	addObjectToCanvas: (data) ->
 		loader = new THREE.OBJLoader()
@@ -261,7 +288,7 @@ class Bulb.Document extends CJS.Document
 		canvas = @getCanvas()
 		canvas.getEvent('objectAdded').subscribe(@, @handleAddingObject)
 		canvas.getEvent('saveStatus').subscribe(@, @saveStatus)
-		@getObjectList().getEvent('remove').subscribe(canvas, canvas.remove)
+		@getObjectList().getEvent('remove').subscribe(@, @removeMesh)
 		window.addEventListener 'load', =>
 			status = JSON.parse(localStorage.getItem('status'))
 			if status.position? and status.statuses?
@@ -275,7 +302,7 @@ class Bulb.Document extends CJS.Document
 			if @active
 				canvas = @getCanvas()
 				if event.keyCode is 127
-					canvas.remove(canvas.getSelectedObject().id)
+					@removeMesh(canvas.getSelectedObject().id)
 				if event.keyCode is 26
 					if event.shiftKey then @redo() else @undo()
 				if event.keyCode is 110
@@ -349,9 +376,9 @@ class Bulb.Document extends CJS.Document
 				step = 0.01
 				step = 0.1 if event.shiftKey
 				if event.keyCode in [37,40]
-					@getCanvas().moveSelected(-step, axis)
+					@getCanvas().moveSelectedVertex(-step, axis)
 				if event.keyCode in [38,39]
-					@getCanvas().moveSelected(step, axis)
+					@getCanvas().moveSelectedVertex(step, axis)
 		window.addEventListener 'keyup', (event) =>
 			if event.keyCode in [37,38,39,40] and @getCanvas().getMoved()
 				@saveStatus()
@@ -359,7 +386,6 @@ class Bulb.Document extends CJS.Document
 		window.onbeforeunload = (event) =>
 			localStorage.setItem('status', JSON.stringify(@status))
 			console.log('saved')
-		window.oncopy = (event) => alert('fuck')
 		window.addEventListener 'mousemove', (event) =>
 			if @moveAxis?
 				diffX = event.clientX - @lastX if @lastX?

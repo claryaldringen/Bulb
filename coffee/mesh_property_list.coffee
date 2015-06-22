@@ -12,6 +12,10 @@ class Bulb.MeshPropertyList extends CJS.Component
 
 	getScaleId: (axis) -> @id + '-s-' + axis
 
+	reloadVariables: ->
+		@variables = JSON.parse(localStorage.getItem('variables'))
+		@render()
+
 	setObject: (@object) ->
 		@variables = JSON.parse(localStorage.getItem('variables')) if not @variables?
 		@data = @object.userData if @object.userData?

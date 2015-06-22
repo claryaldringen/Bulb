@@ -38,7 +38,7 @@ class Bulb.VertexHelper extends THREE.Object3D
 			@matrix = new THREE.Matrix4().getInverse(@object.matrixWorld)
 		@matrix
 
-	attach: (@vertex, @face, @object) ->
+	attach: (@vertex, @object) ->
 		@update()
 
 	detach: ->
