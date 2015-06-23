@@ -54,6 +54,8 @@ class Bulb.Document extends CJS.Document
 			objectList.setItems(@getCanvas().getObjectCollection().getAsArray('objects'))
 			objectList.getEvent('select').subscribe(@, @selectObjectFromObjectList)
 			objectList.getEvent('rename').subscribe(@, @renameObject)
+			objectList.getEvent('hide').subscribe(@, @hideObject)
+			objectList.getEvent('show').subscribe(@, @showObject)
 		objectList
 
 	propertyTabChange: (tabMenu) ->
@@ -155,9 +157,11 @@ class Bulb.Document extends CJS.Document
 			tabMenu.getChildById(id).setPosition(object.position).setRotation(object.rotation).setScale(object.scale)
 		@
 
-	renameObject: (params) ->
-		@getCanvas().renameObject(params.id, params.value)
+	renameObject: (params) -> @getCanvas().renameObject(params.id, params.value)
 
+	hideObject: (objectId) ->	@getCanvas().hideObject(objectId)
+
+	showObject: (objectId) -> @getCanvas().showObject(objectId)
 
 	getSaveDialog: ->
 		child = @getChildById('saveDialog')

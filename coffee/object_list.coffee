@@ -19,11 +19,16 @@ class Bulb.ObjectList extends CJS.Component
 			@selectedItemId = element.dataset.id*1
 			@getEvent('select').fire(@selectedItemId)
 			elements = document.querySelectorAll('#' + @id + ' .selected')
-			for el in elements
-				el.classList.remove('selected')
+			el.classList.remove('selected') for el in elements
 			element.classList.add('selected')
 		if element.hasClass('doChange')
 			element.parentElement.classList.add('selected')
+		if element.hasClass('doHide')
+			@getEvent('hide').fire(element.dataset.id)
+			@render()
+		if element.hasClass('doShow')
+			@getEvent('show').fire(element.dataset.id)
+			@render()
 
 	change: (element) -> @getEvent('rename').fire({id: element.dataset.id, value: element.value})
 
@@ -33,7 +38,10 @@ class Bulb.ObjectList extends CJS.Component
 			html += '<li data-id="' + item.id + '" class="' + (if @selectedItemId is item.id then 'doSelect selected' else 'doSelect') + '">'
 			html += '<input data-id="' + item.id + '" class="doChange" type="text" value="' + item.name + '">'
 			html += '<div class="actions">'
-			html += '<img src="images/eye.png" data-id="' + item.id + '" class="doHide" title="Hide">&nbsp;'
+			if item.visible
+				html += '<img src="images/eye.png" data-id="' + item.id + '" class="doHide" title="Hide">&nbsp;'
+			else
+				html += '<img src="images/noteye.png" data-id="' + item.id + '" class="doShow" title="Show">&nbsp;'
 			html += '<img src="images/cross.png" data-id="' + item.id + '" class="doRemove" title="Remove (Delete)">'
 			html += '</div></li>'
 		html += '</ul></div>'

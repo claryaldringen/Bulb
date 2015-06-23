@@ -305,6 +305,14 @@ class Bulb.Canvas extends CJS.Component
 		@getScene().getObjectById(id*1, yes).name = name
 		@
 
+	hideObject: (id) ->
+		@getScene().getObjectById(id*1, yes).visible = no
+		@restoreView()
+
+	showObject: (id) ->
+		@getScene().getObjectById(id*1, yes).visible = yes
+		@restoreView()
+
 	replaceObject: (params) ->
 		@selectedObject.geometry.dispose()
 		switch @selectedObject.geometry.type
