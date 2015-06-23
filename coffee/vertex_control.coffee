@@ -148,36 +148,41 @@ class Bulb.VertexControl extends Bulb.VertexHelper
 			@move(sub[axis], axis)
 		@point = point.clone()
 
-	computeMove: (vector, axis, step) ->
+	computeMove: (vector, axis, step, max) ->
 		distance = vector.distanceTo(@vertex)
 		func = @getMathFunction()
 		if @axis isnt 'n'
 			sub = new THREE.Vector3(0,0,0)
 			for ax in ['x','y','z'] when ax is axis
-				sub[ax] = func(distance) * step
+				sub[ax] = func(distance, max) * step
 				break
 		else
 			normal = @getNormal().clone()
 			normal.normalize()
-			normal.x *= func(distance) * step
-			normal.y *= func(distance) * step
-			normal.z *= func(distance) * step
+			normal.x *= func(distance, max) * step
+			normal.y *= func(distance, max) * step
+			normal.z *= func(distance, max) * step
 			sub = normal
 		sub
 
 
 	move: (step, axis) ->
 		if @object.selecteds.length
+			maxDistance = 0
+			for index in @object.selecteds
+				vector = @object.geometry.vertices[index]
+				distance = vector.distanceTo(@vertex)
+				maxDistance = distance if maxDistance < distance
 			for index in @object.selecteds
 				vector = @object.geometry.vertices[index]
 				position = vector.clone()
 				position = @object.localToWorld(position) if @space is 'world'
-				position.add(@computeMove(vector, axis, step))
+				position.add(@computeMove(vector, axis, step, maxDistance))
 				position = @object.worldToLocal(position) if @space is 'world'
 				vector.set(position.x, position.y, position.z)
 			position = @vertex.clone()
 			position = @object.localToWorld(position) if @space is 'world'
-			position.add( @computeMove(@vertex, axis, step))
+			position.add( @computeMove(@vertex, axis, step, maxDistance))
 			position = @object.worldToLocal(position) if @space is 'world'
 			@vertex.set(position.x, position.y, position.z)
 			@update()

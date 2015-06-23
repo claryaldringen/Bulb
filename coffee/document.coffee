@@ -215,7 +215,6 @@ class Bulb.Document extends CJS.Document
 		link.click()
 
 	undo: ->
-		console.log @status
 		if @status.position
 			canvas = @getCanvas()
 			canvas.scene = null
@@ -281,6 +280,7 @@ class Bulb.Document extends CJS.Document
 	addObjectToCanvas: (data, file) ->
 		loader = new THREE.OBJLoader()
 		@getCanvas().addLoadedObject(loader.parse(data), file)
+		@saveStatus()
 		@
 
 	handleAddingObject: (items) -> @getObjectList().restore(items)
@@ -301,9 +301,10 @@ class Bulb.Document extends CJS.Document
 		@getObjectList().getEvent('remove').subscribe(@, @removeMesh)
 		window.addEventListener 'load', =>
 			status = JSON.parse(localStorage.getItem('status'))
-			if status.position? and status.statuses?
+			console.log status
+			if status?
 				@status = status
-				@status.position = status.position+1
+				@status.position++ if @status.position isnt @status.statuses.length
 				@undo()
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>
