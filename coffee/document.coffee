@@ -246,15 +246,16 @@ class Bulb.Document extends CJS.Document
 				zipper.readFiles(file)
 			else
 				reader = new FileReader()
-				reader.onload = (frEvent) =>
+				reader.onload = ((self, file) -> (frEvent) ->
 					data = frEvent.target.result
-					@addObjectToCanvas(data)
+					self.addObjectToCanvas(data, file)
+				)(@, file)
 				reader.readAsText(file)
 		el.click()
 
-	parseFile: (text, ext) ->
+	parseFile: (text, ext, file) ->
 		if ext is 'obj'
-			@addObjectToCanvas(text)
+			@addObjectToCanvas(text, file)
 		else
 			json = localStorage.getItem('scripts')
 			if json?
@@ -272,9 +273,9 @@ class Bulb.Document extends CJS.Document
 		,100
 		@
 
-	addObjectToCanvas: (data) ->
+	addObjectToCanvas: (data, file) ->
 		loader = new THREE.OBJLoader()
-		@getCanvas().addLoadedObject(loader.parse(data))
+		@getCanvas().addLoadedObject(loader.parse(data), file)
 		@
 
 	handleAddingObject: (items) -> @getObjectList().restore(items)

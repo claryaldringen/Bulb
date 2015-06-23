@@ -6,7 +6,7 @@ class Bulb.HelpDialog extends Bulb.Dialog
 
 	getHtml: ->
 		"""
-		<h3>Shortkeys</h3>
+		<h3>Shortcuts</h3>
 		<ul>
 			<li><b>m</b> - Change mode (Mesh/Vertices)</li>
 			<li><b>x</b> - Set actual axis to X.</li>

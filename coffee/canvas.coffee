@@ -194,8 +194,10 @@ class Bulb.Canvas extends CJS.Component
 
 	getMaterial: -> new THREE.MeshLambertMaterial({color: 0x999999, transparent: yes, opacity: 0.9})
 
-	addLoadedObject: (object) ->
+	addLoadedObject: (object, file) ->
+		console.log object
 		for child in object.children
+			child.name = file.name.substring(0, file.name.length - 4) if child.name is "" and file?
 			geometry = new THREE.Geometry().fromBufferGeometry(child.geometry)
 			geometry.mergeVertices()
 			centroid = new THREE.Vector3()
