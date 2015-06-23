@@ -1,6 +1,10 @@
 
 class Bulb.VertexList extends CJS.Component
 
+	constructor: (id, parent) ->
+		super(id, parent)
+		@mode = 'select'
+
 	setVertices: (@vertices) -> @
 
 	getVertices: -> @vertices
@@ -8,6 +12,8 @@ class Bulb.VertexList extends CJS.Component
 	setGeometry: (@geometry) -> @
 
 	getGeometry: -> @geometry
+
+	setSelectMode: (@mode) -> @
 
 	setHighlighted: (@highlightedIndex) ->
 		@highlightedIndex = highlightedIndex*1 if highlightedIndex?
@@ -34,6 +40,11 @@ class Bulb.VertexList extends CJS.Component
 			@func = element.options[element.selectedIndex].value
 			@getEvent('changeFunc').fire(@func)
 
+	click: (element) ->
+		if element.hasClass('doChangeSelectMode')
+			if @mode is 'select' then @mode = 'move' else @mode = 'select'
+			@getEvent('doChangeSelectMode').fire(@mode)
+			@render()
 
 	renderFinish: ->
 		top = document.querySelector('#' + @id + ' .selected')?.offsetTop
@@ -43,6 +54,18 @@ class Bulb.VertexList extends CJS.Component
 
 	getHtml: ->
 		html = ''
+		title = @mode.charAt(0).toUpperCase() + @mode.slice(1)
+		html += '<div class="button ' + @mode + ' doChangeSelectMode" title="' + title + '"><img src="./images/wand.png" width="16" height="16"></div>'
+		html += '<label>Move Function: <select class="doSetFunc">'
+		html += '<option value="constant" ' + (if @func is 'constant' then 'selected' else '') + '>Constant</option>'
+		html += '<option value="linear" ' + (if @func is 'linear' then 'selected' else '') + '>Linear</option>'
+		html += '<option value="quadratic" ' + (if @func is 'quadratic' then 'selected' else '') + '>Quadratic</option>'
+		html += '<option value="exponential" ' + (if @func is 'exponential' then 'selected' else '') + '>Exponential</option>'
+		html += '<option value="logarithm" ' + (if @func is 'logarithm' then 'selected' else '') + '>Logarithm</option>'
+		html += '<option value="hyperbolic" ' + (if @func is 'hyperbolic' then 'selected' else '') + '>Hyperbolic</option>'
+		html += '<option value="sinus" ' + (if @func is 'sinus' then 'selected' else '') + '>Sinus</option>'
+		html += '<option value="cosinus" ' + (if @func is 'cosinus' then 'selected' else '') + '>Cosinus</option>'
+		html += '</select></label>'
 		if @vertices?
 			html += '<table><tr><th>X</th><th>Y</th><th>Z</th></tr>'
 			vertex = @vertices[0] if @vertices.length is 1
@@ -54,16 +77,6 @@ class Bulb.VertexList extends CJS.Component
 			html += '</tr>'
 			html += '</table>'
 			html += '<br>'
-		html += '<label>Move Function: <select class="doSetFunc">'
-		html += '<option value="constant" ' + (if @func is 'constant' then 'selected' else '') + '>Constant</option>'
-		html += '<option value="linear" ' + (if @func is 'linear' then 'selected' else '') + '>Linear</option>'
-		html += '<option value="quadratic" ' + (if @func is 'quadratic' then 'selected' else '') + '>Quadratic</option>'
-		html += '<option value="exponential" ' + (if @func is 'exponential' then 'selected' else '') + '>Exponential</option>'
-		html += '<option value="logarithm" ' + (if @func is 'logarithm' then 'selected' else '') + '>Logarithm</option>'
-		html += '<option value="hyperbolic" ' + (if @func is 'hyperbolic' then 'selected' else '') + '>Hyperbolic</option>'
-		html += '<option value="sinus" ' + (if @func is 'sinus' then 'selected' else '') + '>Sinus</option>'
-		html += '<option value="cosinus" ' + (if @func is 'cosinus' then 'selected' else '') + '>Cosinus</option>'
-		html += '</select></label>'
 		if @geometry?
 			html += '<table>'
 			for property,value of @geometry

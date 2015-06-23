@@ -93,6 +93,9 @@ class Bulb.SelectControl
 			@gizmoShowed = yes
 		@
 
+	getSelectMode: ->
+		if @gizmoShowed then 'move' else 'select'
+
 	selectVector: (add) ->
 		if @active
 			actualVectorIndex = @getVertexIndex(@actualVector)

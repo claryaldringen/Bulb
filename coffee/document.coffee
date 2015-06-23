@@ -76,6 +76,7 @@ class Bulb.Document extends CJS.Document
 					child.getEvent('changeVertices').subscribe(canvas, canvas.changeGeometry)
 					child.getEvent('change').subscribe(@, @geometryChange)
 					child.getEvent('changeFunc').subscribe(canvas, canvas.setMathFunction)
+					child.getEvent('doChangeSelectMode').subscribe(@, @changeSelectMode)
 				child.setGeometry(object.geometry?.parameters)
 
 	getProperties: ->
@@ -284,6 +285,10 @@ class Bulb.Document extends CJS.Document
 		@status.statuses[@status.position] = @getCanvas().getJSON()
 		@status.position++
 
+	changeSelectMode: (mode) ->
+		canvas = @getCanvas()
+		canvas.toggleSelectMode() if canvas.getSelectMode() isnt mode
+
 	bindEvents: ->
 		super()
 		canvas = @getCanvas()
@@ -370,6 +375,9 @@ class Bulb.Document extends CJS.Document
 					canvas.setFillSelect()
 				if event.keyCode is 112
 					canvas.toggleSelectMode()
+					tabMenu = @getProperties()
+					verticesTab = tabMenu.getChildById(tabMenu.getChildId('vertices'))
+					verticesTab.setSelectMode(canvas.getSelectMode()).render() if verticesTab?
 
 		window.addEventListener 'keydown', (event) =>
 			axis = @getCanvas().getControlAxis()

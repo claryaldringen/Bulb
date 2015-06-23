@@ -37,6 +37,8 @@ class Bulb.Canvas extends CJS.Component
 		@getSelectControl().toggleSelectMode()
 		@restoreView()
 
+	getSelectMode: -> @getSelectControl().getSelectMode()
+
 	setFillSelect: ->
 		@getSelectControl().setFillSelect()
 		@
