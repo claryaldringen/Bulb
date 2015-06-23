@@ -8,6 +8,7 @@ class Bulb.SelectControl
 		@floodFill = no
 		@gizmoShowed = no
 		@domElement.addEventListener 'mousedown', (event) => @onPointerDown(event)
+		@domElement.addEventListener 'mousemove', (event) => @onPointerMove(event)
 		@domElement.addEventListener 'click', (event) => @onPointerClick(event)
 
 	setFillSelect: ->
@@ -228,7 +229,7 @@ class Bulb.SelectControl
 				@unhighlightVector()
 
 	onPointerClick: (event) ->
-		if not @gizmoShowed
+		if not @gizmoShowed and @down
 			@mouseOverFace(event)
 			event.preventDefault()
 			add = 0
@@ -238,6 +239,9 @@ class Bulb.SelectControl
 			@selectVector(add) if @selectedObject?
 			@active = yes
 			@down = no
+
+	onPointerMove: (event) ->
+		@down = no
 
 	onPointerDown: ->
 		@down = yes
