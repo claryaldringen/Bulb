@@ -34,7 +34,6 @@ class Bulb.VertexList extends CJS.Component
 		if element.hasClass('doSelectVertex')
 			for vertex,i in @vertices
 				@vertices[i][element.dataset.axis] = element.value*1
-				console.log @vertices
 			@getEvent('changeVertices').fire(@)
 		if element.hasClass('doSetFunc')
 			@func = element.options[element.selectedIndex].value

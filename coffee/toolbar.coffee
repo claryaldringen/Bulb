@@ -16,6 +16,8 @@ class Bulb.Toolbar extends CJS.Component
 		@getEvent('addSphere').fire() if element.hasClass('doAddSphere')
 		@getEvent('addCylinder').fire() if element.hasClass('doAddCylinder')
 		@getEvent('addTorus').fire() if element.hasClass('doAddTorus')
+		@getEvent('addFluid').fire() if element.hasClass('doAddFluid')
+		@getEvent('addWind').fire() if element.hasClass('doAddWind')
 		@getEvent('changeTransformMode').fire(element.value) if element.hasClass('doChangeMode')
 		@getEvent('changeTransformSpace').fire(element.value) if element.hasClass('doChangeSpace')
 
@@ -46,7 +48,11 @@ class Bulb.Toolbar extends CJS.Component
 		html += '<div class="button doAddCube" title="Cube"><img src="./images/cube.png" width="16" height="16"></div>'
 		html += '<div class="button doAddSphere" title="Sphere"><img src="./images/sphere.png" width="16" height="16"></div>'
 		html += '<div class="button doAddCylinder" title="Cylinder"><img src="./images/cylinder.png" width="16" height="16"></div>'
-		html += '<div class="button  doAddTorus" title="Torus"><img src="./images/torus.png" width="16" height="16"></div>'
+		html += '<div class="button doAddTorus" title="Torus"><img src="./images/torus.png" width="16" height="16"></div>'
+		html += '<br>'
+		html += '<div class="button doAddFluid" title="Fluid Source"><img src="./images/water.png" width="16" height="16"></div>'
+		html += '<div class="button doAddWind" title="Wind Source"><img src="./images/wind.png" width="16" height="16"></div>'
+		html += '<div style="clear: both;"></div>'
 		html += '<fieldset><legend>Transform Mode</legend>'
 		html += '<label><input class="doChangeMode" type="radio" name="mode" value="translate" checked>Translate</label><br>'
 		html += '<label><input class="doChangeMode" type="radio" name="mode" value="rotate">Rotate</label><br>'

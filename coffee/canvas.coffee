@@ -197,7 +197,6 @@ class Bulb.Canvas extends CJS.Component
 	getMaterial: -> new THREE.MeshLambertMaterial({color: 0x999999, transparent: yes, opacity: 0.9})
 
 	addLoadedObject: (object, file) ->
-		console.log object
 		for child in object.children
 			child.name = file.name.substring(0, file.name.length - 4) if child.name is "" and file?
 			geometry = new THREE.Geometry().fromBufferGeometry(child.geometry)
@@ -211,9 +210,10 @@ class Bulb.Canvas extends CJS.Component
 			@addObject(geometry, child.name, centroid)
 		@
 
-	addObject: (geometry, name, position) ->
+	addObject: (geometry, name, position, type = 'model') ->
 		object = new THREE.Mesh(geometry, @getMaterial())
 		object.name = name
+		object.userData.type = type
 		object.position.copy(position) if position?
 		@getScene().add(object)
 		@getObjectCollection().add('objects', object)
@@ -258,6 +258,30 @@ class Bulb.Canvas extends CJS.Component
 		geometry = new THREE.Geometry()
 		geometry.vertices.push(new THREE.Vector3(0,0,0))
 		@addObject(geometry, name)
+
+	addFluidSource: ->
+		object = new THREE.Mesh(new THREE.BoxGeometry(1,1,1,1,1,1), @getMaterial())
+		object.name = 'FluidSource'
+		object.userData.type = 'fluid_source'
+		object.position.set(0,0,0)
+		object.scale.set(0.1,0.1,0.1)
+		@getScene().add(object)
+		@getObjectCollection().add('objects', object)
+		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
+		@getEvent('saveStatus').fire()
+		@restoreView()
+
+	addWindSource: ->
+		object = new THREE.Mesh(new THREE.BoxGeometry(1,1,1,1,1,1), @getMaterial())
+		object.name = 'WindSource'
+		object.userData.type = 'wind_source'
+		object.position.set(0,0,0)
+		object.scale.set(0.01,0.5,0.5)
+		@getScene().add(object)
+		@getObjectCollection().add('objects', object)
+		@getEvent('objectAdded').fire(@getObjectCollection().getAsArray('objects'))
+		@getEvent('saveStatus').fire()
+		@restoreView()
 
 	getSelectHelper: ->
 		if not @selectHelper?

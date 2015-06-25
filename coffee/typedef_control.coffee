@@ -59,6 +59,10 @@ class Bulb.TypedefControl extends CJS.Component
 			@variables[index] = @variables[index-1]
 			@variables[index-1] = variable
 			@render()
+		if element.hasClass('doRestore') and confirm('Really restore defaults?')
+			localStorage.removeItem('variables')
+			localStorage.setItem('variables', JSON.stringify(Bulb.data.variables))
+			@load().render()
 
 	getHtml: ->
 		html = ''
@@ -124,4 +128,5 @@ class Bulb.TypedefControl extends CJS.Component
 			html += '</table>'
 		html += '<table><tr>'
 		html += '<td class="button"><button class="doAddVariable">Add Variable</button></td>'
+		html += '<td class="button"><button class="doRestore">Restore Defaults</button></td>'
 		html += '</tr></table>'

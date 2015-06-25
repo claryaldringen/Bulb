@@ -42,7 +42,8 @@ class Bulb.Document extends CJS.Document
 			toolbar.getEvent('addSphere').subscribe(canvas, canvas.addSphere)
 			toolbar.getEvent('addCylinder').subscribe(canvas, canvas.addCylinder)
 			toolbar.getEvent('addTorus').subscribe(canvas, canvas.addTorus)
-			toolbar.getEvent('addLight').subscribe(canvas, canvas.addLight)
+			toolbar.getEvent('addFluid').subscribe(canvas, canvas.addFluidSource)
+			toolbar.getEvent('addWind').subscribe(canvas, canvas.addWindSource)
 			toolbar.getEvent('changeTransformMode').subscribe(canvas, canvas.setTransformMode)
 			toolbar.getEvent('changeTransformSpace').subscribe(canvas, canvas.setTransformSpace)
 		toolbar
@@ -301,15 +302,12 @@ class Bulb.Document extends CJS.Document
 		@getObjectList().getEvent('remove').subscribe(@, @removeMesh)
 		window.addEventListener 'load', =>
 			status = JSON.parse(localStorage.getItem('status'))
-			console.log status
 			if status?
 				@status = status
 				@status.position++ if @status.position isnt @status.statuses.length
 				@undo()
 		window.addEventListener 'resize', => @getCanvas().resize()
 		window.addEventListener 'keypress', (event) =>
-			console.log event.keyCode
-			#console.log event.shiftKey
 			if @active
 				canvas = @getCanvas()
 				if event.keyCode is 127

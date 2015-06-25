@@ -81,12 +81,15 @@ class Bulb.ScriptControl extends CJS.Component
 				@scripts[@actual].label = label.value
 				@scripts[@actual].extension = ext.value
 				@scripts[@actual].type = ['export','import'][type.selectedIndex]
-				#console.log type
 				@save().render()
 		if element.hasClass('doDelete') and confirm('Really delete?')
 			@scripts.splice(@actual, 1)
 			@actual--
 			@save().render()
+		if element.hasClass('doRestore') and confirm('Really restore defaults?')
+			localStorage.removeItem('scripts')
+			localStorage.setItem('scripts', JSON.stringify(Bulb.data.scripts))
+			@load().render()
 
 	getHtml: ->
 		@scripts[@actual].type = 'export' if not @scripts[@actual].type?
@@ -102,11 +105,12 @@ class Bulb.ScriptControl extends CJS.Component
 		html += '<option value="export" ' + (if @scripts[@actual].type is 'export' then 'selected' else '') + '>Export</option>'
 		html += '<option value="import" ' + (if @scripts[@actual].type is 'import' then 'selected' else '') + '>Import</option>'
 		html += '</select></label>&nbsp;'
-		html += '<label>Label: <input id="' + @getElLabelId() + '" type="text" value="' + @scripts[@actual].label + '"></label>&nbsp;'
-		html += '<label>Extension: <input id="' + @getElExtId() + '" type="text" value="' + @scripts[@actual].extension + '"></label>&nbsp;'
+		html += '<label>Label: <input id="' + @getElLabelId() + '" type="text" class="label" value="' + @scripts[@actual].label + '"></label>&nbsp;'
+		html += '<label>Extension: <input id="' + @getElExtId() + '" type="text" class="extension" value="' + @scripts[@actual].extension + '"></label>&nbsp;'
 		if @actual is 0
 			html += '<button class="doAdd">Add</button>'
 		else
 			html += '<button class="doSave">Save</button>&nbsp;'
 			html += '<button class="doDelete">Delete</button>'
+		html += '<button class="doRestore">Restore</button>'
 		html += '<textarea id="' + @getElTAId() + '">' + @scripts[@actual].code + '</textarea>'
