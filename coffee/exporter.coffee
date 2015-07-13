@@ -61,3 +61,36 @@ class Bulb.Exporter
 				files.push({name: filename + '.' + script.extension, content: new Blob([@getSettings(canvas, script.code)], {type: 'text/plain' })})
 		zipper = new Bulb.Zipper()
 		zipper.addFiles(files, (zipped) -> callback(zipped, filename + '.zip'))
+
+	getSceneX3d: (canvas, title)->
+		output = '<!DOCTYPE html><html><title>' + title + '</title>'
+		output += '<script type="text/javascript" src="http://www.x3dom.org/download/x3dom.js"> </script>'
+		output += '<link rel="stylesheet" type="text/css" href="http://www.x3dom.org/download/x3dom.css"> </link>'
+		output += '</head><body>'
+		output += '<x3d width="' + (canvas.getWidth() - 100) + 'px" height="' + (canvas.getHeight() - 100) + 'px">'
+		output += '<Scene>'
+		for object in canvas.getObjectCollection().getAsArray('objects')
+			output += '<Transform '
+			output += 'translation="' + object.position.x + ' ' + object.position.y + ' ' + object.position.z + '" '
+			output += 'rotation="' + object.rotation.x + ' ' + object.rotation.y + ' ' + object.rotation.z + '" '
+			output += 'scale="' + object.scale.x + ' ' + object.scale.y + ' ' + object.scale.z + '" '
+			output += '>'
+			output += '<Shape>'
+			output += '<Appearance><Material diffuseColor="0.6 0.6 0.6"></Material></Appearance>'
+			output += '<IndexedTriangleSet index="'
+			output += face.a + ' ' + face.b + ' ' + face.c + ' ' for face in object.geometry.faces
+			output += '">'
+			output += '<Coordinate point="'
+			output += vector.x + ' ' + vector.y + ' ' + vector.z + ' ' for vector in object.geometry.vertices
+			output += '">'
+			output += '</Coordinate>'
+			output += '<Normal vector="'
+			output += face.normal.x + ' ' + face.normal.y + ' ' + face.normal.z + ' ' for face in object.geometry.faces
+			output += '">'
+			output += '</Normal>'
+			output += '</IndexedTriangleSet>'
+			output += '</Shape>'
+			output += '</Transform>'
+		output += '</Scene>'
+		output += '</x3d>'
+		output += '</body></html>'

@@ -171,6 +171,7 @@ class Bulb.Document extends CJS.Document
 			child.addSaveType('Selected object', 'obj')
 				.addSaveType('All objects on scene', 'obj')
 				.addSaveType('Scene and terrain settings', 'zip')
+				.addSaveType('Scene in X3DOM', 'html')
 			child.getEvent('save').subscribe(@, @export)
 		child
 
@@ -206,6 +207,10 @@ class Bulb.Document extends CJS.Document
 				@download(output, filename)
 			when 2
 				@getExporter().getAll(filename, @getCanvas(), @download)
+			when 3
+				output = @getExporter().getSceneX3d(@getCanvas(), filename)
+				filename += '.html'
+				@download(output, filename)
 
 	download: (output, filename) ->
 		blob = new Blob( [output], {type: 'text/plain' })
